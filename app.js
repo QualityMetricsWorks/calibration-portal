@@ -1,12 +1,476 @@
-const DATA_FILE="equipos.csv";const WARNING_DAYS=30;let equipmentData=[];const elements={searchInput:document.getElementById("equipmentSearch"),searchButton:document.getElementById("searchButton"),suggestions:document.getElementById("suggestions"),messageBox:document.getElementById("messageBox"),card:document.getElementById("equipmentCard"),certificateButton:document.getElementById("certificateButton"),copyLinkButton:document.getElementById("copyLinkButton")};document.addEventListener("DOMContentLoaded",initialize);
-async function initialize(){try{const response=await fetch(DATA_FILE,{cache:"no-store"});if(!response.ok)throw new Error();equipmentData=parseCSV(await response.text());const equipmentId=new URLSearchParams(window.location.search).get("id");if(equipmentId){elements.searchInput.value=equipmentId;showEquipmentById(equipmentId)}else showMessage("Escribe el ID del equipo para consultar su información.");elements.searchButton.addEventListener("click",performSearch);elements.searchInput.addEventListener("keydown",e=>{if(e.key==="Enter")performSearch()});elements.searchInput.addEventListener("input",showSuggestions);elements.copyLinkButton.addEventListener("click",copyCurrentLink)}catch{showMessage("No fue posible cargar equipos.csv. Publica el sitio en GitHub Pages; no abras index.html directamente desde una carpeta local.")}}
-function parseCSV(text){const rows=[];let row=[],field="",inside=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&inside&&n==='"'){field+='"';i++}else if(c==='"')inside=!inside;else if(c===','&&!inside){row.push(field.trim());field=""}else if((c==='\n'||c==='\r')&&!inside){if(c==='\r'&&n==='\n')i++;row.push(field.trim());if(row.some(x=>x!==""))rows.push(row);row=[];field=""}else field+=c}if(field.length||row.length){row.push(field.trim());if(row.some(x=>x!==""))rows.push(row)}const headers=rows.shift().map(h=>h.replace(/^\uFEFF/,""));return rows.map(values=>{const item={};headers.forEach((h,i)=>item[h]=values[i]??"");return item})}
-function performSearch(){const q=elements.searchInput.value.trim();if(!q){showMessage("Escribe un ID o una descripción para buscar.");hideCard();return}const exact=equipmentData.find(i=>normalize(i.ID)===normalize(q));if(exact)return displayEquipment(exact);const matches=findMatches(q);if(matches.length===1)displayEquipment(matches[0]);else if(matches.length>1){showMessage(`Se encontraron ${matches.length} coincidencias. Selecciona una opción.`);renderSuggestions(matches);hideCard()}else{showMessage(`No se encontró ningún equipo relacionado con “${q}”.`);hideCard()}}
-function showEquipmentById(id){const e=equipmentData.find(i=>normalize(i.ID)===normalize(id));e?displayEquipment(e):(showMessage(`No se encontró el equipo ${id}.`),hideCard())}
-function findMatches(q){const n=normalize(q);return equipmentData.filter(i=>[i.ID,i.Descripcion,i.Tipo,i.Marca,i.Modelo,i.Serie].some(v=>normalize(v).includes(n))).slice(0,8)}
-function showSuggestions(){const q=elements.searchInput.value.trim();if(q.length<2){elements.suggestions.hidden=true;return}renderSuggestions(findMatches(q))}
-function renderSuggestions(matches){elements.suggestions.innerHTML="";if(!matches.length){elements.suggestions.hidden=true;return}matches.forEach(i=>{const b=document.createElement("button");b.type="button";b.className="suggestion";b.textContent=`${i.ID} — ${i.Descripcion}`;b.addEventListener("click",()=>{elements.searchInput.value=i.ID;elements.suggestions.hidden=true;displayEquipment(i)});elements.suggestions.appendChild(b)});elements.suggestions.hidden=false}
-function displayEquipment(i){elements.suggestions.hidden=true;elements.messageBox.hidden=true;elements.card.hidden=false;const next=parseDate(i.ProximaCalibracion),days=calculateDaysRemaining(next),status=determineStatus(i.Estatus,days,next);setText("equipmentType",i.Tipo||"Equipo de medición");setText("equipmentDescription",i.Descripcion||"Sin descripción");setText("equipmentId",i.ID||"Sin ID");setText("brand",i.Marca||"—");setText("model",i.Modelo||"—");setText("serial",i.Serie||"—");setText("location",i.Ubicacion||"—");setText("responsible",i.Responsable||"—");setText("frequency",i.FrecuenciaMeses?`${i.FrecuenciaMeses} meses`:"—");setText("lastCalibration",formatDate(parseDate(i.UltimaCalibracion)));setText("nextCalibration",formatDate(next));setText("daysRemaining",days===null?"Sin fecha":formatDays(days));const badge=document.getElementById("statusBadge");badge.textContent=status.label;badge.className=`status-badge ${status.className}`;if(i.URLCertificado){elements.certificateButton.href=i.URLCertificado;elements.certificateButton.hidden=false}else elements.certificateButton.hidden=true;const url=new URL(window.location.href);url.searchParams.set("id",i.ID);window.history.replaceState({},"",url)}
-function determineStatus(explicit,days,next){const n=normalize(explicit);if(n.includes("vencido"))return{label:"VENCIDO",className:"status-vencido"};if(n.includes("por vencer"))return{label:"POR VENCER",className:"status-por-vencer"};if(n.includes("calibrado"))return{label:"CALIBRADO",className:"status-calibrado"};if(!next||days===null)return{label:"SIN FECHA",className:""};if(days<0)return{label:"VENCIDO",className:"status-vencido"};if(days<=WARNING_DAYS)return{label:"POR VENCER",className:"status-por-vencer"};return{label:"CALIBRADO",className:"status-calibrado"}}
-function parseDate(v){if(!v)return null;const s=v.trim(),iso=s.match(/^(\d{4})-(\d{2})-(\d{2})$/),loc=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);if(iso)return new Date(+iso[1],+iso[2]-1,+iso[3]);if(loc)return new Date(+loc[3],+loc[2]-1,+loc[1]);return null}
-function calculateDaysRemaining(d){if(!d)return null;const t=new Date();t.setHours(0,0,0,0);const x=new Date(d);x.setHours(0,0,0,0);return Math.ceil((x-t)/86400000)}function formatDate(d){return d?new Intl.DateTimeFormat("es-MX",{day:"2-digit",month:"2-digit",year:"numeric"}).format(d):"—"}function formatDays(d){if(d<0)return`${Math.abs(d)} días vencido`;if(d===0)return"Vence hoy";if(d===1)return"1 día";return`${d} días`}function normalize(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}function setText(id,v){document.getElementById(id).textContent=v}function showMessage(m){elements.messageBox.textContent=m;elements.messageBox.hidden=false}function hideCard(){elements.card.hidden=true}async function copyCurrentLink(){try{await navigator.clipboard.writeText(window.location.href);elements.copyLinkButton.textContent="Enlace copiado";setTimeout(()=>elements.copyLinkButton.textContent="Copiar enlace de esta ficha",1800)}catch{alert("Copia manualmente la dirección mostrada en el navegador.")}}
+const DATA_FILE = "equipos.csv";
+const WARNING_DAYS = 30;
+
+let equipmentData = [];
+
+const elements = {
+  searchInput: document.getElementById("equipmentSearch"),
+  searchButton: document.getElementById("searchButton"),
+  suggestions: document.getElementById("suggestions"),
+  messageBox: document.getElementById("messageBox"),
+  card: document.getElementById("equipmentCard"),
+  certificateButton: document.getElementById("certificateButton"),
+  copyLinkButton: document.getElementById("copyLinkButton"),
+  equipmentImage: document.getElementById("equipmentImage")
+};
+
+document.addEventListener("DOMContentLoaded", initialize);
+
+async function initialize() {
+  try {
+    const response = await fetch(DATA_FILE, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error("No fue posible cargar equipos.csv");
+    }
+
+    const csvText = await response.text();
+    equipmentData = parseCSV(csvText);
+
+    const equipmentId = new URLSearchParams(window.location.search).get("id");
+
+    if (equipmentId) {
+      elements.searchInput.value = equipmentId;
+      showEquipmentById(equipmentId);
+    } else {
+      showMessage("Escribe el ID del equipo para consultar su información.");
+    }
+
+    elements.searchButton.addEventListener("click", performSearch);
+
+    elements.searchInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        performSearch();
+      }
+    });
+
+    elements.searchInput.addEventListener("input", showSuggestions);
+
+    elements.copyLinkButton.addEventListener("click", copyCurrentLink);
+  } catch (error) {
+    showMessage(
+      "No fue posible cargar equipos.csv. Verifica que el archivo esté en la misma carpeta que app.js y que el sitio esté publicado en GitHub Pages."
+    );
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"' && insideQuotes && nextChar === '"') {
+      field += '"';
+      i++;
+    } else if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      row.push(field.trim());
+      field = "";
+    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (char === "\r" && nextChar === "\n") {
+        i++;
+      }
+
+      row.push(field.trim());
+
+      if (row.some(cell => cell !== "")) {
+        rows.push(row);
+      }
+
+      row = [];
+      field = "";
+    } else {
+      field += char;
+    }
+  }
+
+  if (field.length || row.length) {
+    row.push(field.trim());
+
+    if (row.some(cell => cell !== "")) {
+      rows.push(row);
+    }
+  }
+
+  if (!rows.length) {
+    return [];
+  }
+
+  const headers = rows
+    .shift()
+    .map(header => header.replace(/^\uFEFF/, "").trim());
+
+  return rows.map(values => {
+    const item = {};
+
+    headers.forEach((header, index) => {
+      item[header] = values[index] ?? "";
+    });
+
+    return item;
+  });
+}
+
+function performSearch() {
+  const query = elements.searchInput.value.trim();
+
+  if (!query) {
+    showMessage("Escribe un ID o una descripción para buscar.");
+    hideCard();
+    return;
+  }
+
+  const exactMatch = equipmentData.find(
+    item => normalize(item.ID) === normalize(query)
+  );
+
+  if (exactMatch) {
+    displayEquipment(exactMatch);
+    return;
+  }
+
+  const matches = findMatches(query);
+
+  if (matches.length === 1) {
+    displayEquipment(matches[0]);
+  } else if (matches.length > 1) {
+    showMessage(
+      `Se encontraron ${matches.length} coincidencias. Selecciona una opción.`
+    );
+    renderSuggestions(matches);
+    hideCard();
+  } else {
+    showMessage(
+      `No se encontró ningún equipo relacionado con “${query}”.`
+    );
+    hideCard();
+  }
+}
+
+function showEquipmentById(id) {
+  const equipment = equipmentData.find(
+    item => normalize(item.ID) === normalize(id)
+  );
+
+  if (equipment) {
+    displayEquipment(equipment);
+  } else {
+    showMessage(`No se encontró el equipo ${id}.`);
+    hideCard();
+  }
+}
+
+function findMatches(query) {
+  const normalizedQuery = normalize(query);
+
+  return equipmentData
+    .filter(item =>
+      [
+        item.ID,
+        item.Descripcion,
+        item.Marca,
+        item.NumeroSerie,
+        item.Rango,
+        item.Ubicacion
+      ].some(value =>
+        normalize(value).includes(normalizedQuery)
+      )
+    )
+    .slice(0, 8);
+}
+
+function showSuggestions() {
+  const query = elements.searchInput.value.trim();
+
+  if (query.length < 2) {
+    elements.suggestions.hidden = true;
+    return;
+  }
+
+  renderSuggestions(findMatches(query));
+}
+
+function renderSuggestions(matches) {
+  elements.suggestions.innerHTML = "";
+
+  if (!matches.length) {
+    elements.suggestions.hidden = true;
+    return;
+  }
+
+  matches.forEach(item => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "suggestion";
+    button.textContent = `${item.ID} — ${item.Descripcion}`;
+
+    button.addEventListener("click", () => {
+      elements.searchInput.value = item.ID;
+      elements.suggestions.hidden = true;
+      displayEquipment(item);
+    });
+
+    elements.suggestions.appendChild(button);
+  });
+
+  elements.suggestions.hidden = false;
+}
+
+function displayEquipment(item) {
+  elements.suggestions.hidden = true;
+  elements.messageBox.hidden = true;
+  elements.card.hidden = false;
+
+  const expirationDate = parseDate(item.FechaVencimiento);
+  const daysRemaining = calculateDaysRemaining(expirationDate);
+
+  const calibrationStatus = determineStatus(
+    item.EstadoCalibracion,
+    daysRemaining,
+    expirationDate
+  );
+
+  setText("equipmentType", "Equipo de medición");
+  setText("equipmentDescription", item.Descripcion || "Sin descripción");
+  setText("equipmentId", item.ID || "Sin ID");
+  setText("brand", item.Marca || "—");
+  setText("model", item.Rango || "—");
+  setText("serial", item.NumeroSerie || "—");
+  setText("location", item.Ubicacion || "—");
+  setText("responsible", item.EstadoEquipo || "—");
+
+  setText(
+    "frequency",
+    item.FrecuenciaMeses
+      ? `${item.FrecuenciaMeses} meses`
+      : "—"
+  );
+
+  setText(
+    "lastCalibration",
+    formatDate(parseDate(item.FechaCalibracion))
+  );
+
+  setText(
+    "nextCalibration",
+    formatDate(expirationDate)
+  );
+
+  setText(
+    "daysRemaining",
+    daysRemaining === null
+      ? "Sin fecha"
+      : formatDays(daysRemaining)
+  );
+
+  const statusBadge = document.getElementById("statusBadge");
+
+  statusBadge.textContent = calibrationStatus.label;
+  statusBadge.className =
+    `status-badge ${calibrationStatus.className}`;
+
+  if (item.URLCertificado) {
+    elements.certificateButton.href = item.URLCertificado;
+    elements.certificateButton.hidden = false;
+  } else {
+    elements.certificateButton.hidden = true;
+  }
+
+  if (elements.equipmentImage) {
+    const imagePath =
+      item.Foto && item.Foto.trim() !== ""
+        ? item.Foto
+        : "imagenes/sin-imagen.jpg";
+
+    elements.equipmentImage.src = imagePath;
+    elements.equipmentImage.alt =
+      `Fotografía del equipo ${item.ID || ""}`;
+
+    elements.equipmentImage.onerror = function () {
+      this.onerror = null;
+      this.src = "imagenes/sin-imagen.jpg";
+    };
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("id", item.ID);
+  window.history.replaceState({}, "", url);
+}
+
+function determineStatus(explicitStatus, daysRemaining, expirationDate) {
+  const normalizedStatus = normalize(explicitStatus);
+
+  if (normalizedStatus === "vencido") {
+    return {
+      label: "VENCIDO",
+      className: "status-vencido"
+    };
+  }
+
+  if (normalizedStatus === "por vencer") {
+    return {
+      label: "POR VENCER",
+      className: "status-por-vencer"
+    };
+  }
+
+  if (normalizedStatus === "calibrado") {
+    return {
+      label: "CALIBRADO",
+      className: "status-calibrado"
+    };
+  }
+
+  if (!expirationDate || daysRemaining === null) {
+    return {
+      label: "SIN FECHA",
+      className: ""
+    };
+  }
+
+  if (daysRemaining < 0) {
+    return {
+      label: "VENCIDO",
+      className: "status-vencido"
+    };
+  }
+
+  if (daysRemaining <= WARNING_DAYS) {
+    return {
+      label: "POR VENCER",
+      className: "status-por-vencer"
+    };
+  }
+
+  return {
+    label: "CALIBRADO",
+    className: "status-calibrado"
+  };
+}
+
+function parseDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const cleanedValue = value.trim();
+
+  const isoFormat = cleanedValue.match(
+    /^(\d{4})-(\d{2})-(\d{2})$/
+  );
+
+  if (isoFormat) {
+    return new Date(
+      Number(isoFormat[1]),
+      Number(isoFormat[2]) - 1,
+      Number(isoFormat[3])
+    );
+  }
+
+  const localFormat = cleanedValue.match(
+    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/
+  );
+
+  if (localFormat) {
+    return new Date(
+      Number(localFormat[3]),
+      Number(localFormat[2]) - 1,
+      Number(localFormat[1])
+    );
+  }
+
+  return null;
+}
+
+function calculateDaysRemaining(date) {
+  if (!date) {
+    return null;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+
+  return Math.ceil(
+    (targetDate - today) / 86400000
+  );
+}
+
+function formatDate(date) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
+}
+
+function formatDays(days) {
+  if (days < 0) {
+    return `${Math.abs(days)} días vencido`;
+  }
+
+  if (days === 0) {
+    return "Vence hoy";
+  }
+
+  if (days === 1) {
+    return "1 día";
+  }
+
+  return `${days} días`;
+}
+
+function normalize(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function setText(id, value) {
+  const element = document.getElementById(id);
+
+  if (element) {
+    element.textContent = value;
+  }
+}
+
+function showMessage(message) {
+  elements.messageBox.textContent = message;
+  elements.messageBox.hidden = false;
+}
+
+function hideCard() {
+  elements.card.hidden = true;
+}
+
+async function copyCurrentLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+
+    elements.copyLinkButton.textContent = "Enlace copiado";
+
+    setTimeout(() => {
+      elements.copyLinkButton.textContent =
+        "Copiar enlace de esta ficha";
+    }, 1800);
+  } catch {
+    alert(
+      "Copia manualmente la dirección mostrada en el navegador."
+    );
+  }
+}
