@@ -1,4 +1,3 @@
-ID,Descripcion,Tipo,Marca,Modelo,Serie,Ubicacion,Responsable,FrecuenciaMeses,UltimaCalibracion,ProximaCalibracion,Estatus,URLCertificado
-CALCA-001,Cav 2,Equipo de medición,Ejemplo,Modelo 01,SER-001,Laboratorio de Calidad,Calidad,12,2026-01-15,2027-01-15,CALIBRADO,certificados/CALCA-001.pdf
-CALCA-002,Micrómetro 0-25 mm,Micrómetro,Mitutoyo,293-340,SER-002,Área de Maquinado,Supervisor de Calidad,12,2025-08-10,2026-08-10,POR VENCER,certificados/CALCA-002.pdf
-CALCA-003,Indicador de carátula,Indicador,Starrett,25-441,SER-003,Laboratorio de Calidad,Metrología,12,2024-06-01,2025-06-01,VENCIDO,certificados/CALCA-003.pdf
+ID,Descripcion,Marca,NumeroSerie,Rango,EstadoEquipo,FrecuenciaMeses,FechaCalibracion,FechaVencimiento,EstadoCalibracion,Ubicacion,Foto,URLCertificado
+CALCA-001,Calibrador digital,Mitutoyo,12345678,0-150 mm,ACTIVO,12,2026-01-15,2027-01-15,CALIBRADO,Laboratorio de Calidad,imagenes/CALCA-001.jpg,certificados/CALCA-001.pdf
+CALCA-002,Micrómetro exterior,Starrett,987654,0-25 mm,ACTIVO,6,2026-03-10,2026-09-10,POR VENCER,Maquinado,imagenes/CALCA-002.jpg,certificados/CALCA-002.pdf
