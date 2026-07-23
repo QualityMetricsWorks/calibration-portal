@@ -1,4 +1,4 @@
 ID,Descripcion,Marca,NumeroSerie,Rango,EstadoEquipo,FrecuenciaMeses,FechaCalibracion,FechaVencimiento,EstadoCalibracion,Ubicacion,Foto,URLCertificado
 CALCA-001,Caliper,Mitutoyo,A25016716,0" - 8",ACTIVO,12,27/02/2026,27/02/2027,220,CALIBRADO,Laboratorio,imagenes/CALCA-001.jpg,certificados/CALCA-001.jpg
-CALCA-002,Caliper,Mitutoyo,A21191861,0" - 8",ACTIVO,12,27/02/2026,27/02/2027,220,CALIBRADO,Tool Crib,imagenes/CALCA-002.jpg,certificados/CALCA-002.jpg
+CALCA-002,Caliper,Mitutoyo,A21191861,0" - 8",ACTIVO,12,27/02/2026,27/02/2027,220,CALIBRADO,Laboratorio,imagenes/CALCA-002.jpg,certificados/CALCA-002.jpg
 CALMI-001,Micrometer,Mitutoyo,71500992,0" - 1",ACTIVO,12,27/02/2026,27/02/2027,220,CALIBRADO,Laboratorio,imagenes/CALMI-001.jpg,certificados/CALMI-001.jpg
