@@ -837,3 +837,24 @@ footer {
     white-space: normal;
   }
 }
+.company-logo-link {
+  display: inline-flex;
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.company-logo-link:focus-visible {
+  outline: 3px solid var(--brand-orange);
+  outline-offset: 4px;
+}
+
+.company-logo-link .company-logo {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.company-logo-link:hover .company-logo {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
