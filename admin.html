@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administración de Equipos | Metrics Works</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <header class="admin-header">
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">METRICS WORKS</p>
+        <h1>Administración de equipos</h1>
+        <p class="subtitle">Alta de equipos y generación de equipos.csv</p>
+      </div>
+
+      <a class="dashboard-link" href="./">Volver al portal</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="notice">
+      <strong>Flujo de trabajo:</strong>
+      registra el equipo, revisa la vista previa y descarga el archivo
+      <code>equipos.csv</code> actualizado. Después reemplázalo en GitHub.
+    </section>
+
+    <section class="stats-grid">
+      <article>
+        <span>Equipos cargados</span>
+        <strong id="loadedCount">0</strong>
+      </article>
+      <article>
+        <span>Último ID generado</span>
+        <strong id="generatedId">—</strong>
+      </article>
+      <article>
+        <span>Registros pendientes</span>
+        <strong id="pendingCount">0</strong>
+      </article>
+    </section>
+
+    <div class="workspace">
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-eyebrow">NUEVO REGISTRO</p>
+            <h2>Alta de equipo</h2>
+          </div>
+          <button id="resetButton" class="secondary-button" type="button">
+            Limpiar formulario
+          </button>
+        </div>
+
+        <form id="equipmentForm" novalidate>
+          <div class="form-grid">
+            <label>
+              <span>ID del equipo *</span>
+              <div class="inline-field">
+                <input id="equipmentId" name="ID" type="text" required />
+                <button id="generateIdButton" class="small-button" type="button">
+                  Generar
+                </button>
+              </div>
+              <small>Ejemplo: CALMI-015</small>
+            </label>
+
+            <label>
+              <span>Descripción *</span>
+              <input id="description" name="Descripcion" type="text" required />
+            </label>
+
+            <label>
+              <span>Marca *</span>
+              <input id="brand" name="Marca" type="text" required list="brandOptions" />
+              <datalist id="brandOptions"></datalist>
+            </label>
+
+            <label>
+              <span>Número de serie *</span>
+              <input id="serialNumber" name="NumeroSerie" type="text" required />
+            </label>
+
+            <label>
+              <span>Rango / Alcance *</span>
+              <input id="range" name="Rango" type="text" required />
+            </label>
+
+            <label>
+              <span>Estado del equipo *</span>
+              <select id="equipmentStatus" name="EstadoEquipo" required>
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+                <option value="BAJA">BAJA</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Frecuencia de calibración *</span>
+              <select id="frequency" name="FrecuenciaMeses" required>
+                <option value="1">1 mes</option>
+                <option value="3">3 meses</option>
+                <option value="6">6 meses</option>
+                <option value="12" selected>12 meses</option>
+                <option value="18">18 meses</option>
+                <option value="24">24 meses</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Fecha de calibración *</span>
+              <input id="calibrationDate" name="FechaCalibracion" type="date" required />
+            </label>
+
+            <label>
+              <span>Fecha de vencimiento *</span>
+              <input id="expirationDate" name="FechaVencimiento" type="date" required />
+              <small>Se calcula automáticamente con la frecuencia.</small>
+            </label>
+
+            <label>
+              <span>Estado de calibración</span>
+              <input id="calibrationStatus" name="EstadoCalibracion" type="text" readonly />
+            </label>
+
+            <label>
+              <span>Ubicación *</span>
+              <input id="location" name="Ubicacion" type="text" required list="locationOptions" />
+              <datalist id="locationOptions"></datalist>
+            </label>
+
+            <label>
+              <span>Ruta de fotografía</span>
+              <input id="photoPath" name="Foto" type="text" />
+              <small>Ejemplo: imagenes/CALMI-015.jpg</small>
+            </label>
+
+            <label class="full-width">
+              <span>Ruta del certificado</span>
+              <input id="certificatePath" name="URLCertificado" type="text" />
+              <small>Ejemplo: certificados/CALMI-015.pdf</small>
+            </label>
+          </div>
+
+          <div id="validationMessage" class="validation-message" hidden></div>
+
+          <div class="form-actions">
+            <button class="primary-button" type="submit">
+              Agregar equipo
+            </button>
+            <button id="previewButton" class="secondary-button" type="button">
+              Actualizar vista previa
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel preview-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-eyebrow">VISTA PREVIA</p>
+            <h2>Ficha del equipo</h2>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-header">
+            <div>
+              <span>Equipo de medición</span>
+              <h3 id="previewDescription">Sin descripción</h3>
+              <p id="previewId">Sin ID</p>
+            </div>
+            <strong id="previewStatus" class="status-badge">SIN FECHA</strong>
+          </div>
+
+          <img
+            id="previewImage"
+            class="preview-image"
+            src="imagenes/sin-imagen.jpg"
+            alt="Vista previa del equipo"
+          />
+
+          <dl class="preview-data">
+            <div><dt>Marca</dt><dd id="previewBrand">—</dd></div>
+            <div><dt>Serie</dt><dd id="previewSerial">—</dd></div>
+            <div><dt>Rango</dt><dd id="previewRange">—</dd></div>
+            <div><dt>Ubicación</dt><dd id="previewLocation">—</dd></div>
+            <div><dt>Calibración</dt><dd id="previewCalibrationDate">—</dd></div>
+            <div><dt>Vencimiento</dt><dd id="previewExpirationDate">—</dd></div>
+          </dl>
+
+          <div class="qr-link-preview">
+            <span>Enlace para QR</span>
+            <code id="previewLink">?id=</code>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="panel pending-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-eyebrow">SESIÓN ACTUAL</p>
+          <h2>Equipos agregados</h2>
+        </div>
+
+        <button id="downloadCsvButton" class="primary-button" type="button" disabled>
+          Descargar equipos.csv actualizado
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Descripción</th>
+              <th>Marca</th>
+              <th>Serie</th>
+              <th>Ubicación</th>
+              <th>Vencimiento</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <tr>
+              <td colspan="7" class="empty-state">
+                Todavía no se han agregado equipos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Metrics Works · Módulo administrativo local
+  </footer>
+
+  <script src="admin.js"></script>
+</body>
+</html>
