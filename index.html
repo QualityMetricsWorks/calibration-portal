@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics Works Calibration Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-block">
+        <a class="company-logo-link" href="./" aria-label="Ir al Dashboard" title="Ir al Dashboard">
+          <img class="company-logo" src="imagenes/logo-metrics-works.png" alt="Metrics Works Global Manufacturing" />
+        </a>
+        <div class="brand-text">
+          <p class="eyebrow">METRICS WORKS</p>
+          <h1>Calibration Management System</h1>
+          <p class="subtitle">Consulta pública del estado de equipos de medición</p>
+        </div>
+        <button id="themeToggleButton" class="theme-toggle-button" type="button" aria-label="Activar modo oscuro" title="Cambiar apariencia">
+          <span id="themeToggleIcon" aria-hidden="true">🌙</span>
+          <span id="themeToggleText">Modo oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="search-panel">
+      <label for="equipmentSearch">Buscar equipo por ID, descripción, marca, número de serie o rango</label>
+      <div class="search-row">
+        <input id="equipmentSearch" type="search" placeholder="Ejemplo: CALCA-001" autocomplete="off" />
+        <button id="searchButton" type="button">Buscar</button>
+      </div>
+      <div id="suggestions" class="suggestions" hidden></div>
+    </section>
+
+    <section id="messageBox" class="message" hidden></section>
+
+    <section id="dashboard" class="dashboard" hidden>
+      <div class="dashboard-heading">
+        <div>
+          <p class="section-eyebrow">RESUMEN GENERAL</p>
+          <h2>Dashboard de calibración</h2>
+          <p>Estado actual de los equipos registrados en el sistema.</p>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card total-card"><span class="summary-label">Equipos registrados</span><strong id="totalEquipment" class="summary-number">0</strong></article>
+        <article class="summary-card calibrated-card"><span class="summary-label">Calibrados</span><strong id="calibratedEquipment" class="summary-number">0</strong></article>
+        <article class="summary-card warning-card"><span class="summary-label">Por vencer</span><strong id="warningEquipment" class="summary-number">0</strong></article>
+        <article class="summary-card expired-card"><span class="summary-label">Vencidos</span><strong id="expiredEquipment" class="summary-number">0</strong></article>
+      </div>
+
+      <section class="dashboard-controls" aria-label="Filtros del Dashboard">
+        <div class="filter-field">
+          <label for="locationFilter">Ubicación</label>
+          <select id="locationFilter"><option value="">Todas las ubicaciones</option></select>
+        </div>
+        <div class="filter-field">
+          <label for="brandFilter">Marca</label>
+          <select id="brandFilter"><option value="">Todas las marcas</option></select>
+        </div>
+        <button id="clearFiltersButton" class="secondary-button" type="button">Limpiar filtros</button>
+      </section>
+
+      <section class="status-chart-section">
+        <div class="panel-heading"><div><p class="section-eyebrow">ESTADO GENERAL</p><h3>Distribución de calibración</h3></div></div>
+        <div class="status-chart-layout">
+          <div id="statusDonut" class="status-donut" role="img" aria-label="Gráfica de distribución del estado de calibración">
+            <div class="status-donut-center"><strong id="chartTotal">0</strong><span>equipos</span></div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-color calibrated-color"></span><span>Calibrados</span><strong id="chartCalibrated">0%</strong></div>
+            <div class="legend-item"><span class="legend-color warning-color"></span><span>Por vencer</span><strong id="chartWarning">0%</strong></div>
+            <div class="legend-item"><span class="legend-color expired-color"></span><span>Vencidos</span><strong id="chartExpired">0%</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="dashboard-panel">
+          <div class="panel-heading"><div><p class="section-eyebrow">DISTRIBUCIÓN</p><h3>Equipos por ubicación</h3></div></div>
+          <div id="locationList" class="location-list"></div>
+        </section>
+        <section class="dashboard-panel">
+          <div class="panel-heading"><div><p class="section-eyebrow">CALIBRACIONES</p><h3>Próximos vencimientos</h3></div></div>
+          <div id="upcomingList" class="upcoming-list"></div>
+        </section>
+      </div>
+
+      <div class="dashboard-action"><button id="dashboardSearchButton" class="dashboard-search-button" type="button">Buscar equipo</button></div>
+    </section>
+
+    <section id="equipmentCard" class="equipment-card" hidden>
+      <div class="equipment-toolbar"><button id="backToDashboardButton" class="back-button" type="button">Volver al Dashboard</button></div>
+      <div class="card-header">
+        <div><p id="equipmentType" class="equipment-type"></p><h2 id="equipmentDescription"></h2><p id="equipmentId" class="equipment-id"></p></div>
+        <div id="statusBadge" class="status-badge">SIN ESTATUS</div>
+      </div>
+      <div id="statusProgress" class="status-progress progress-sin-fecha">
+        <div class="status-progress-header"><strong id="statusProgressLabel">SIN FECHA</strong><span id="statusProgressDetail">Sin fecha de vencimiento</span></div>
+        <div class="status-progress-track"><div id="statusProgressFill" class="status-progress-fill"></div></div>
+      </div>
+      <div class="equipment-image-container"><img id="equipmentImage" class="equipment-image" src="imagenes/sin-imagen.jpg" alt="Fotografía del equipo" /></div>
+      <div class="card-grid">
+        <div class="field"><span>Marca</span><strong id="brand"></strong></div>
+        <div class="field"><span>Alcance / Rango</span><strong id="model"></strong></div>
+        <div class="field"><span>Número de serie</span><strong id="serial"></strong></div>
+        <div class="field"><span>Ubicación</span><strong id="location"></strong></div>
+        <div class="field"><span>Estado del equipo</span><strong id="responsible"></strong></div>
+        <div class="field"><span>Frecuencia</span><strong id="frequency"></strong></div>
+        <div class="field"><span>Fecha de calibración</span><strong id="lastCalibration"></strong></div>
+        <div class="field"><span>Fecha de vencimiento</span><strong id="nextCalibration"></strong></div>
+      </div>
+      <div id="daysPanel" class="days-panel"><span>Días restantes</span><strong id="daysRemaining"></strong></div>
+      <div class="actions">
+        <a id="certificateButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Abrir certificado PDF</a>
+        <button id="copyLinkButton" class="secondary-button" type="button">Copiar enlace de esta ficha</button>
+        <button id="printEquipmentButton" class="secondary-button" type="button">Imprimir ficha</button>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>Metrics Works · Calibration Management System</p></footer>
+  <script src="app.js"></script>
+</body>
+</html>
