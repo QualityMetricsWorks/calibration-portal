@@ -1,130 +1,718 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Metrics Works Calibration Management System</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="GUVEL General System - Smarter Quality Solutions">
+  <title>GUVEL General System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=1.1.1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="config.js?v=1.1.1"></script>
+  <script type="module" src="assets/js/app.js?v=1.1.1"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand-block">
-        <a class="company-logo-link" href="./" aria-label="Ir al Dashboard" title="Ir al Dashboard">
-          <img class="company-logo" src="imagenes/logo-metrics-works.png" alt="Metrics Works Global Manufacturing" />
-        </a>
-        <div class="brand-text">
-          <p class="eyebrow">METRICS WORKS</p>
-          <h1>Calibration Management System</h1>
-          <p class="subtitle">Consulta pública del estado de equipos de medición</p>
+  <header class="guvel-shell">
+    <div class="product-bar">
+      <div class="product-brand">
+        <img class="product-logo" src="assets/img/guvel-logo.jpeg" alt="GUVEL">
+        <div class="product-identity">
+          <div class="product-name"><span class="brand-gu">GU</span><span class="brand-vel">VEL</span><strong>General System</strong></div>
+          <small>Smarter Quality Solutions</small>
         </div>
-        <button id="themeToggleButton" class="theme-toggle-button" type="button" aria-label="Activar modo oscuro" title="Cambiar apariencia">
-          <span id="themeToggleIcon" aria-hidden="true">🌙</span>
-          <span id="themeToggleText">Modo oscuro</span>
+      </div>
+
+      <div class="product-context">
+        <span class="module-badge"><span class="module-dot"></span> Production & Quality</span>
+        <span class="version-badge">v1.4.3</span>
+        <div class="language-control">
+          <button id="languageMenuBtn" class="language-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Idioma / Language">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-3.1a15.7 15.7 0 0 0-1.4-3.5A8.1 8.1 0 0 1 18.9 8ZM12 4c.8 1 1.5 2.3 1.9 4h-3.8C10.5 6.3 11.2 5 12 4ZM4.3 14a8 8 0 0 1 0-4h3.4a16.7 16.7 0 0 0 0 4H4.3Zm.8 2h3.1a15.7 15.7 0 0 0 1.4 3.5A8.1 8.1 0 0 1 5.1 16Zm3.1-8H5.1a8.1 8.1 0 0 1 4.5-3.5A15.7 15.7 0 0 0 8.2 8ZM12 20c-.8-1-1.5-2.3-1.9-4h3.8c-.4 1.7-1.1 3-1.9 4Zm2.3-6H9.7a14.6 14.6 0 0 1 0-4h4.6a14.6 14.6 0 0 1 0 4Zm.1 5.5a15.7 15.7 0 0 0 1.4-3.5h3.1a8.1 8.1 0 0 1-4.5 3.5ZM16.3 14a16.7 16.7 0 0 0 0-4h3.4a8 8 0 0 1 0 4h-3.4Z"/></svg>
+            <span id="currentLanguageLabel">ES</span>
+            <svg class="language-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5H7Z"/></svg>
+          </button>
+          <div id="languageMenu" class="language-menu" hidden>
+            <button type="button" class="language-option active" data-lang="es"><span>Español</span><small>ES</small></button>
+            <button type="button" class="language-option" data-lang="en"><span>English</span><small>EN</small></button>
+          </div>
+        </div>
+        <button id="themeToggleBtn" class="theme-trigger" type="button" title="Cambiar tema / Toggle theme" aria-label="Cambiar tema">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2h2v2h-2Zm0 18v-2h2v2h-2ZM4 11H2v2h2v-2Zm18 0h-2v2h2v-2ZM5.64 7.05 4.22 5.64l1.41-1.42 1.42 1.42-1.41 1.41Zm12.73 12.73-1.41-1.42 1.41-1.41 1.42 1.41-1.42 1.42ZM18.36 7.05l-1.41-1.41 1.41-1.42 1.42 1.42-1.42 1.41ZM5.64 19.78l-1.42-1.42 1.42-1.41 1.41 1.41-1.41 1.42ZM13 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.7 14.3A8.5 8.5 0 0 1 9.7 3.3a8.5 8.5 0 1 0 11 11Z"/></svg>
+          <span id="themeLabel">Claro</span>
         </button>
+      </div>
+
+      <div class="account-area">
+        <div class="account-copy">
+          <strong id="companyContext">—</strong>
+          <span id="userEmail">—</span>
+        </div>
+        <div class="account-avatar" aria-hidden="true">U</div>
+        <button id="signOutBtn" class="btn btn-ghost btn-sm">Salir</button>
+      </div>
+    </div>
+
+    <div class="navigation-bar">
+      <nav class="main-nav" aria-label="Navegación de GUVEL General System">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg></span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item capture-access" data-view="capture">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5V4Zm3 3v2h8V7H8Zm0 4v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg></span>
+          <span>Captura</span>
+        </button>
+        <button class="nav-item management-access" data-view="clients">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V6l8-3 8 3v14h-5v-5H9v5H4Zm4-9h2V8H8v3Zm6 0h2V8h-2v3Z"/></svg></span>
+          <span>Clientes</span>
+        </button>
+        <button class="nav-item management-access" data-view="parts">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Zm-7 9 7 4 7-4v5l-7 4-7-4v-5Z"/></svg></span>
+          <span>Números de Parte</span>
+        </button>
+        <button class="nav-item management-access" data-view="machines">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 20V9h4l2-4h6l2 4h4v11H3Zm4-3h10v-5H7v5Zm3-8h4l-1-2h-2l-1 2Z"/></svg></span>
+          <span>Máquinas</span>
+        </button>
+        <button class="nav-item management-access" data-view="personnel">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c0-3.3 3.1-6 7-6s7 2.7 7 6H5Z"/></svg></span>
+          <span>Personal</span>
+        </button>
+        <button class="nav-item management-access" data-view="catalog">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5V4Zm3 3v2h8V7H8Zm0 4v2h8v-2H8Zm0 4v2h8v-2H8Z"/></svg></span>
+          <span>Catálogo</span>
+        </button>
+        <button class="nav-item" data-view="runs">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4V4Zm0 6h16v10H4V10Zm3 3v2h4v-2H7Zm0 4v1h7v-1H7Z"/></svg></span>
+          <span>Corridas</span>
+        </button>
+        <button class="nav-item" data-view="data">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v3H4V5Zm0 5h16v3H4v-3Zm0 5h16v3H4v-3Z"/></svg></span>
+          <span>Datos</span>
+        </button>
+        <button class="nav-item audit-access" data-view="history" hidden>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 8.9 10.5h-2.1A7 7 0 1 1 12 5c1.9 0 3.6.8 4.9 2H14v2h6V3h-2v2.1A8.9 8.9 0 0 0 12 3Zm-1 4v6l5 3 .9-1.7-3.9-2.3V7H11Z"/></svg></span>
+          <span>Historial</span>
+        </button>        <button class="nav-item admin-only" data-view="users" hidden>
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-3.9-5A4 4 0 0 0 16 11Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 2c-3.3 0-6 1.8-6 4v2h12v-2c0-2.2-2.7-4-6-4ZM8 13c-3.3 0-6 1.6-6 3.5V19h6v-2c0-1.5.8-2.8 2.1-3.7A8 8 0 0 0 8 13Z"/></svg></span>
+          <span>Usuarios</span>
+        </button>
+        <button class="nav-item management-access" data-view="settings">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.8 7.8 0 0 0 .1-1 7.8 7.8 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a8.5 8.5 0 0 0-1.7-1L15 3.5h-4L10.7 6a8.5 8.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.8 7.8 0 0 0-.1 1 7.8 7.8 0 0 0 .1 1l-2 1.5 2 3.4 2.4-1a8.5 8.5 0 0 0 1.7 1l.3 2.5h4l.3-2.5a8.5 8.5 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5ZM13 15.5A3.5 3.5 0 1 1 13 8a3.5 3.5 0 0 1 0 7.5Z"/></svg></span>
+          <span>Configuración</span>
+        </button>
+      </nav>
+      <div class="nav-status">
+        <span class="sync-indicator"></span>
+        <span id="storageStatus">Conectando…</span>
       </div>
     </div>
   </header>
 
-  <main>
-    <section class="search-panel">
-      <label for="equipmentSearch">Buscar equipo por ID, descripción, marca, número de serie o rango</label>
-      <div class="search-row">
-        <input id="equipmentSearch" type="search" placeholder="Ejemplo: CALCA-001" autocomplete="off" />
-        <button id="searchButton" type="button">Buscar</button>
+  <main class="main-content">
+    <section class="topbar page-toolbar">
+      <div class="page-heading">
+        <div class="breadcrumb"><span>GUVEL General System</span><span>/</span><strong id="pageTitle">Dashboard</strong></div>
+        <p class="page-description">Gestión General Operativo</p>
       </div>
-      <div id="suggestions" class="suggestions" hidden></div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary action-btn" id="refreshDataBtn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.76-4.24L13 11h8V3l-3.35 3.35Z"/></svg>
+          <span>Actualizar</span>
+        </button>
+        <button class="btn btn-primary action-btn history-only-action" id="exportBtn" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v9l3-3 1.4 1.4L12 16.8l-5.4-5.4L8 10l3 3V4ZM5 18h14v2H5v-2Z"/></svg>
+          <span>Exportar Excel</span>
+        </button>
+      </div>
     </section>
 
-    <section id="messageBox" class="message" hidden></section>
+    <section id="dashboardView" class="view active">
+      <div class="dashboard-tabs" role="tablist">
+        <button class="dashboard-tab active" data-dashboard-tab="general">General</button>
+        <button class="dashboard-tab" data-dashboard-tab="production">Producción</button>
+        <button class="dashboard-tab" data-dashboard-tab="scrap">Calidad</button>
+        <button class="dashboard-tab" data-dashboard-tab="maintenance">Mantenimiento</button>
+      </div>
+      <div class="filter-panel card dashboard-filter-panel compact-filters">
+        <div class="field"><label>Periodo</label><select id="filterPeriod"><option value="current">Actual</option><option value="previous_week">Semana anterior</option><option value="previous_day">Día anterior</option><option value="previous_month">Mes anterior</option><option value="previous_quarter">Trimestre anterior</option><option value="previous_half">Semestre anterior</option><option value="previous_year">Año anterior</option><option value="custom">Personalizado</option></select></div>
+        <div class="field custom-date-field"><label>Desde</label><input type="date" id="filterStart"></div>
+        <div class="field custom-date-field"><label>Hasta</label><input type="date" id="filterEnd"></div>
+        <div class="field"><label>Cliente</label><select id="filterClient"></select></div>
+        <div class="field"><label>Número de Parte</label><select id="filterPartNumber"></select></div>
+        <div class="field maintenance-filter" hidden><label>Máquina</label><select id="filterMachine"></select></div>
+        <button class="btn btn-ghost" id="clearFiltersBtn">Limpiar</button>
+      </div>
+      <div class="dashboard-panel active" data-dashboard-panel="general">
+        <div class="kpi-grid kpi-grid-6">
+          <article class="kpi-card info"><span>OEE</span><strong id="kpiOee">—</strong><small id="kpiOeeNote">Requiere tiempo ciclo configurado</small></article>
+          <article class="kpi-card"><span>Producción</span><strong id="kpiProduction">0</strong><small>Piezas registradas</small></article>
+          <article class="kpi-card danger"><span>Scrap</span><strong id="kpiScrap">0.00%</strong><small id="kpiScrapQty">0 piezas</small></article>
+          <article class="kpi-card warning"><span>PPM</span><strong id="kpiPpm">0</strong><small>Scrap / producción</small></article>
+          <article class="kpi-card success"><span>Yield</span><strong id="kpiYield">100.00%</strong><small>Buenas / producción</small></article>
+          <article class="kpi-card money"><span>COPQ Scrap</span><strong id="kpiCopq">$0.00</strong><small>Costo estándar estimado</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">Tendencia</p><h3>Scrap %</h3></div></div><div class="chart-wrap"><canvas id="scrapTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">Tendencia</p><h3>PPM</h3></div></div><div class="chart-wrap"><canvas id="ppmTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">Tendencia</p><h3>Yield</h3></div></div><div class="chart-wrap"><canvas id="yieldTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">Tendencia</p><h3>COPQ Scrap</h3></div></div><div class="chart-wrap"><canvas id="copqTrendChart"></canvas></div></article>
+        </div>
+        <article class="card section-card"><div class="card-header"><div><p class="eyebrow">Concentración de pérdida</p><h3>Top 3 productos con mayor scrap</h3></div></div><div id="topProductsGrid" class="top-products-grid"></div></article>
+      </div>
+      <div class="dashboard-panel" data-dashboard-panel="production">
+        <div class="section-intro"><p class="eyebrow">Producción</p><h2>OEE y Desempeño</h2><p>Disponibilidad, Performance y Quality calculados con los turnos, CT ideal y paros registrados.</p></div>
+        <div class="kpi-grid kpi-grid-4">
+          <article class="kpi-card info"><span>OEE</span><strong id="kpiProdOee">—</strong><small id="kpiProdOeeNote">Configuración requerida</small></article>
+          <article class="kpi-card"><span>Availability</span><strong id="kpiAvailability">—</strong><small>Tiempo operativo / planificado</small></article>
+          <article class="kpi-card"><span>Performance</span><strong id="kpiPerformance">—</strong><small>CT ideal vs tiempo operativo</small></article>
+          <article class="kpi-card success"><span>Quality</span><strong id="kpiQuality">—</strong><small>Buenas / producción</small></article>
+        </div>
+        <div class="dashboard-grid"><article class="card chart-card wide"><div class="card-header"><h3>Producción por día</h3></div><div class="chart-wrap"><canvas id="productionTrendChart"></canvas></div></article></div>
+      </div>
+      <div class="dashboard-panel" data-dashboard-panel="scrap">
+        <div class="section-intro"><p class="eyebrow">Calidad</p><h2>Calidad</h2><p>Distribución y priorización de pérdidas por defecto y Número de Parte.</p></div>
+        <div class="dashboard-grid">
+          <article class="card chart-card"><div class="card-header"><h3>Scrap por defecto</h3></div><div class="chart-wrap"><canvas id="scrapDefectPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><h3>Scrap por Número de Parte</h3></div><div class="chart-wrap"><canvas id="scrapPartPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por defecto</h3></div></div><div class="chart-wrap"><canvas id="scrapDefectParetoChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por Número de Parte</h3></div></div><div class="chart-wrap"><canvas id="scrapPartParetoChart"></canvas></div></article>
+        </div>
+      </div>
+      <div class="dashboard-panel" data-dashboard-panel="maintenance">
+        <div class="section-intro"><p class="eyebrow">Mantenimiento</p><h2>Tiempos Muertos</h2><p>Distribución y priorización de paros registrados durante producción.</p></div>
+        <div class="kpi-grid"><article class="kpi-card warning"><span>Tiempo muerto</span><strong id="kpiDowntime">0 min</strong><small>Periodo seleccionado</small></article><article class="kpi-card"><span>Eventos</span><strong id="kpiDowntimeEvents">0</strong><small>Paros registrados</small></article></div>
+        <div class="dashboard-grid">
+          <article class="card chart-card"><div class="card-header"><h3>Paros por motivo</h3></div><div class="chart-wrap"><canvas id="downtimeReasonPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><h3>Paros por máquina</h3></div><div class="chart-wrap"><canvas id="downtimeMachinePieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto de paros</h3></div></div><div class="chart-wrap"><canvas id="downtimeReasonParetoChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por máquina</h3></div></div><div class="chart-wrap"><canvas id="downtimeMachineParetoChart"></canvas></div></article>
+        </div>
+      </div>
+    </section>
 
-    <section id="dashboard" class="dashboard" hidden>
-      <div class="dashboard-heading">
+    <section id="captureView" class="view">
+      <div class="capture-mode-grid capture-mode-grid-3">
+        <button class="capture-mode-card active" data-capture-mode="scan">
+          <span class="mode-kicker">Producción</span>
+          <strong>Escaneo de Producción</strong>
+          <small>NP → Lote → Cantidad → Recursos → Personal → Confirmar</small>
+        </button>
+        <button class="capture-mode-card" data-capture-mode="scrap">
+          <span class="mode-kicker">Calidad</span>
+          <strong>Capturar Calidad</strong>
+          <small>Registra scrap, retrabajo o disposición contra una corrida</small>
+        </button>
+        <button class="capture-mode-card" data-capture-mode="downtime">
+          <span class="mode-kicker">Mantenimiento</span>
+          <strong>Capturar Tiempo Muerto</strong>
+          <small>Registra un paro independiente contra una corrida existente</small>
+        </button>
+      </div>
+
+      <article id="captureScanPanel" class="capture-mode-panel active">
+        <div class="trace-shell">
+          <aside class="trace-progress">
+            <div class="trace-progress-head">
+              <p class="eyebrow">Trazabilidad guiada</p>
+              <h3>Nueva producción</h3>
+              <span id="autoContextBadge" class="auto-context-badge">Fecha, hora y turno automáticos</span>
+            </div>
+            <ol class="trace-steps" id="traceSteps">
+              <li class="active" data-step="1"><span>1</span><div><strong>Número de Parte</strong><small>Escanear identificación</small></div></li>
+              <li data-step="2"><span>2</span><div><strong>Lote</strong><small>Escanear lote / batch</small></div></li>
+              <li data-step="3"><span>3</span><div><strong>Cantidad</strong><small>Escanear cantidad de envío</small></div></li>
+              <li data-step="4"><span>4</span><div><strong>Proceso</strong><small>Operación y máquina</small></div></li>
+              <li data-step="5"><span>5</span><div><strong>Personal</strong><small>Supervisor y operador</small></div></li>
+              <li data-step="6"><span>6</span><div><strong>Confirmar</strong><small>Preview y validación</small></div></li>
+            </ol>
+            <button id="resetTraceBtn" class="btn btn-ghost btn-block">Cancelar captura</button>
+          </aside>
+
+          <div class="trace-workspace card">
+            <div class="trace-step-panel active" data-trace-panel="1">
+              <div class="trace-title"><p class="eyebrow">Paso 1 de 6</p><h2>Escanea el Número de Parte</h2><p>El código debe contener únicamente el número de parte o el prefijo <code>NP:</code>.</p></div>
+              <div class="scanner-actions">
+                <button class="btn btn-primary scan-camera-btn" data-scan-target="part">Habilitar cámara</button>
+                <span>o utiliza lector USB</span>
+              </div>
+              <div class="scan-input-row"><input id="tracePartScan" class="scan-input" autocomplete="off" placeholder="Escanea o escribe el NP"><button id="tracePartContinue" class="btn btn-secondary">Continuar</button></div>
+              <div id="tracePartResult" class="trace-result"></div>
+            </div>
+
+            <div class="trace-step-panel" data-trace-panel="2">
+              <div class="trace-title"><p class="eyebrow">Paso 2 de 6</p><h2>Escanea el lote</h2><p>Acepta el contenido directo o formato <code>LOT:250807-A01</code>.</p></div>
+              <div class="scanner-actions"><button class="btn btn-primary scan-camera-btn" data-scan-target="lot">Habilitar cámara</button><span>o utiliza lector USB</span></div>
+              <div class="scan-input-row"><input id="traceLotScan" class="scan-input" autocomplete="off" placeholder="Escanea lote"><button id="traceLotContinue" class="btn btn-secondary">Continuar</button></div>
+              <div id="traceLotResult" class="trace-result"></div>
+            </div>
+
+            <div class="trace-step-panel" data-trace-panel="3">
+              <div class="trace-title"><p class="eyebrow">Paso 3 de 6</p><h2>Escanea la cantidad</h2><p>Acepta valores directos o formato <code>QTY:600</code>.</p></div>
+              <div class="scanner-actions"><button class="btn btn-primary scan-camera-btn" data-scan-target="quantity">Habilitar cámara</button><span>o utiliza lector USB</span></div>
+              <div class="scan-input-row"><input id="traceQtyScan" class="scan-input" inputmode="numeric" autocomplete="off" placeholder="Escanea cantidad"><button id="traceQtyContinue" class="btn btn-secondary">Continuar</button></div>
+              <div id="traceQtyResult" class="trace-result"></div>
+            </div>
+
+            <div class="trace-step-panel" data-trace-panel="4">
+              <div class="trace-title"><p class="eyebrow">Paso 4 de 6</p><h2>Confirma el proceso</h2><p>Solo aparecen recursos autorizados para el Número de Parte escaneado.</p></div>
+              <div class="form-grid two-col">
+                <div class="field"><label>Operación</label><select id="traceOperation" required></select></div>
+                <div class="field"><label>Máquina</label><select id="traceMachine" required></select></div><div class="field"><label>Turno de producción</label><select id="traceShift" required></select></div>
+              </div>
+              <div id="traceResourceValidation" class="validation-stack"></div>
+              <div class="trace-footer-actions"><button class="btn btn-ghost trace-back" data-back-step="3">Atrás</button><button id="traceResourceContinue" class="btn btn-primary">Continuar</button></div>
+            </div>
+
+            <div class="trace-step-panel" data-trace-panel="5">
+              <div class="trace-title"><p class="eyebrow">Paso 5 de 6</p><h2>Identifica al personal</h2><p>Los nombres provienen del catálogo para evitar variantes de captura.</p></div>
+              <div class="form-grid two-col">
+                <div class="field"><label>Supervisor</label><select id="traceSupervisor" required></select></div>
+                <div class="field"><label>Operador</label><select id="traceOperator" required></select></div>
+              </div>
+              <div class="trace-footer-actions"><button class="btn btn-ghost trace-back" data-back-step="4">Atrás</button><button id="tracePeopleContinue" class="btn btn-primary">Generar preview</button></div>
+            </div>
+
+            <div class="trace-step-panel" data-trace-panel="6">
+              <div class="trace-title"><p class="eyebrow">Paso 6 de 6</p><h2>Confirma la producción</h2><p>GUVEL valida la información antes de crear o finalizar la corrida.</p></div>
+              <div id="traceValidation" class="validation-stack"></div>
+              <div id="tracePreview" class="trace-preview"></div>
+              <div class="downtime-capture-box"><div class="card-header"><div><p class="eyebrow">Opcional</p><h3>Tiempos muertos de la corrida</h3></div></div><div class="downtime-entry"><select id="traceDowntimeReason"></select><select id="traceDowntimeType"><option value="unplanned">Unplanned</option><option value="planned">Planned</option></select><input id="traceDowntimeMinutes" type="number" min="1" placeholder="Minutos"><button type="button" id="addTraceDowntimeBtn" class="btn btn-secondary">Agregar paro</button></div><div id="traceDowntimeList" class="downtime-chip-list"></div></div><label class="confirm-check"><input type="checkbox" id="traceConfirmCheck"><span>Confirmo que la información mostrada corresponde al envío físico.</span></label>
+              <div class="trace-footer-actions"><button class="btn btn-ghost trace-back" data-back-step="5">Atrás</button><button id="traceConfirmBtn" class="btn btn-primary">Confirmar producción</button></div>
+            </div>
+          </div>
+        </div>
+      </article>
+<article id="captureScrapPanel" class="capture-mode-panel">
+        <div class="card form-card">
+          <div class="card-header"><div><p class="eyebrow">Evento de calidad</p><h3>Registrar Calidad</h3></div></div>
+          <form id="scrapMatchForm" class="form-grid match-grid">
+            <div class="field"><label>Lote</label><input id="scrapLot" placeholder="Filtrar por lote"></div>
+            <div class="field"><label>Cliente</label><select id="scrapClient" required></select></div>
+            <div class="field"><label>Número de Parte</label><select id="scrapPart" required></select></div>
+            <div class="field"><label>Operación</label><select id="scrapOperation" required></select></div>
+            <div class="field"><label>Máquina</label><select id="scrapMachine" required></select></div>
+            <div class="form-actions"><button type="button" class="btn btn-secondary" id="findProductionBtn">Buscar corrida</button></div>
+          </form>
+          <div class="match-result"><div class="info-strip" id="selectedRunSummary">Completa los datos para localizar la corrida.</div><div id="matchedRunsList" class="entity-list compact"></div></div>
+          <form id="scrapEventForm" class="form-grid">
+            <input type="hidden" id="scrapRun">
+            <div class="field"><label>Defecto</label><select id="scrapDefect" required></select></div>
+            <div class="field"><label>Cantidad</label><input type="number" id="scrapQuantity" min="1" required></div>
+            <div class="field"><label>Disposición</label><select id="scrapDisposition" required><option value="scrap">Scrap</option><option value="rework">Retrabajo</option><option value="repair">Reparación</option><option value="use_as_is">Uso como está</option><option value="supplier_return">Devuelto a proveedor</option><option value="pending">Pendiente</option></select></div>
+            <div class="field"><label>Costo adicional</label><input type="number" id="scrapExtraCost" min="0" step="0.01" value="0"></div>
+            <div class="field"><label>Motivo / causa</label><input id="scrapReason" placeholder="Opcional"></div>
+            <div class="field full"><label>Notas</label><textarea id="scrapNotes" rows="3"></textarea></div>
+            <div class="form-actions full"><button class="btn btn-ghost" type="button" id="cancelScrapBtn">Cancelar</button><button class="btn btn-primary" type="submit">Agregar evento</button></div>
+          </form>
+          <div class="subsection"><div class="card-header"><div><p class="eyebrow">Corrida seleccionada</p><h3>Eventos registrados</h3></div></div><div class="table-scroll"><table><thead><tr><th>Defecto</th><th>Cantidad</th><th>Disposición</th><th>COPQ</th><th></th></tr></thead><tbody id="runScrapEventsBody"></tbody></table></div></div>
+        </div>
+      </article>
+
+      <article id="captureDowntimePanel" class="capture-mode-panel">
+        <div class="card form-card">
+          <div class="card-header"><div><p class="eyebrow">Mantenimiento</p><h3>Registrar Tiempo Muerto</h3></div></div>
+          <div class="info-strip">Localiza la corrida por lote y contexto productivo. El paro quedará vinculado a esa corrida para mantener trazabilidad.</div>
+          <form id="downtimeMatchForm" class="form-grid match-grid">
+            <div class="field"><label>Lote</label><input id="downtimeLot" placeholder="Filtrar por lote"></div>
+            <div class="field"><label>Cliente</label><select id="downtimeClient" required></select></div>
+            <div class="field"><label>Número de Parte</label><select id="downtimePart" required></select></div>
+            <div class="field"><label>Operación</label><select id="downtimeOperation" required></select></div>
+            <div class="field"><label>Máquina</label><select id="downtimeMachine" required></select></div>
+            <div class="form-actions"><button type="button" class="btn btn-secondary" id="findDowntimeRunBtn">Buscar corrida</button></div>
+          </form>
+          <div class="match-result"><div class="info-strip" id="selectedDowntimeRunSummary">Completa los datos para localizar la corrida.</div><div id="matchedDowntimeRunsList" class="entity-list compact"></div></div>
+          <form id="downtimeEventForm" class="form-grid">
+            <input type="hidden" id="downtimeRun">
+            <div class="field"><label>Motivo de paro</label><select id="manualDowntimeReason" required></select></div>
+            <div class="field"><label>Tipo</label><select id="manualDowntimeType"><option value="unplanned">Unplanned · Castiga OEE</option><option value="planned">Planned · No castiga OEE</option></select></div>
+            <div class="field"><label>Minutos</label><input id="manualDowntimeMinutes" type="number" min="1" required></div>
+            <div class="field full"><label>Notas</label><textarea id="manualDowntimeNotes" rows="3" placeholder="Opcional"></textarea></div>
+            <div class="form-actions full"><button type="button" id="cancelDowntimeBtn" class="btn btn-ghost">Cancelar</button><button class="btn btn-primary">Registrar paro</button></div>
+          </form>
+        </div>
+      </article>
+
+      <div id="scannerModal" class="scanner-modal" hidden>
+        <div class="scanner-dialog">
+          <div class="scanner-header"><div><p class="eyebrow">Escaneo por cámara</p><h3 id="scannerTitle">Escanear código</h3></div><button id="closeScannerBtn" class="icon-close" aria-label="Cerrar">×</button></div>
+          <div id="cameraReader" class="camera-reader"></div>
+          <p class="scanner-help">Centra el código dentro de la cámara. La lectura se procesa automáticamente.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="clientsView" class="view">
+      <div class="split-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">Maestro</p><h3>Clientes <span id="clientCount" class="count-badge">0</span></h3></div></div>
+          <form id="clientForm" class="inline-form"><input id="clientName" placeholder="Nombre del cliente" required><input id="clientCode" placeholder="Código"><button class="btn btn-primary">Agregar</button></form>
+          <input id="clientSearch" class="search-input" placeholder="Buscar cliente…">
+          <div id="clientList" class="entity-list"></div>
+        </article>
+        <article class="card detail-panel">
+          <div id="clientEmptyState" class="empty-state">Selecciona un cliente para consultar su ficha.</div>
+          <div id="clientDetail" hidden>
+            <div class="detail-title"><div><p class="eyebrow">Cliente</p><h2 id="clientDetailName">—</h2><span id="clientDetailCode">—</span></div><button id="deleteClientBtn" class="btn btn-danger btn-sm">Eliminar</button></div>
+            <div class="mini-kpi-grid"><div><span>NP</span><strong id="clientDetailParts">0</strong></div><div><span>Producción</span><strong id="clientDetailProduction">0</strong></div><div><span>Scrap</span><strong id="clientDetailScrap">0</strong></div><div><span>PPM</span><strong id="clientDetailPpm">0</strong></div></div>
+            <div class="subsection"><div class="card-header"><h3>Números de Parte</h3><button id="clientAddPartBtn" class="btn btn-secondary btn-sm">Nuevo NP</button></div><div id="clientPartsList" class="entity-list compact"></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="partsView" class="view">
+      <div class="split-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">Maestro</p><h3>Números de Parte <span id="partCount" class="count-badge">0</span></h3></div></div>
+          <form id="partForm" class="stack-form">
+            <select id="partClient" required></select><input id="partNumberName" placeholder="Número de parte" required><input id="partDescription" placeholder="Descripción">
+            <div class="form-row-2"><input id="partCost" type="number" min="0" step="0.0001" placeholder="Costo por pieza"><select id="partCurrency"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
+            <button class="btn btn-primary">Agregar NP</button>
+          </form>
+          <input id="partSearch" class="search-input" placeholder="Buscar número de parte…">
+          <div id="partList" class="entity-list"></div>
+        </article>
+        <article class="card detail-panel">
+          <div id="partEmptyState" class="empty-state">Selecciona un número de parte para consultar su ficha.</div>
+          <div id="partDetail" hidden>
+            <div class="detail-title"><div><p class="eyebrow">Número de Parte</p><h2 id="partDetailNumber">—</h2><span id="partDetailDescription">—</span></div><div class="detail-actions"><button id="editPartBtn" class="btn btn-secondary btn-sm">Editar</button><button id="deletePartBtn" class="btn btn-danger btn-sm">Eliminar</button></div></div>
+            <form id="partEditForm" class="edit-panel" hidden>
+              <div class="form-grid">
+                <div class="field"><label>Descripción</label><input id="editPartDescription"></div>
+                <div class="field"><label>Costo por pieza</label><input id="editPartCost" type="number" min="0" step="0.0001"></div>
+                <div class="field"><label>Moneda</label><select id="editPartCurrency"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
+                <div class="form-actions"><button type="button" id="cancelPartEditBtn" class="btn btn-ghost">Salir</button><button class="btn btn-primary">Guardar cambios</button></div>
+              </div>
+            </form>
+            <div class="mini-kpi-grid six"><div><span>Cliente</span><strong id="partDetailClient">—</strong></div><div><span>Costo</span><strong id="partDetailCost">—</strong></div><div><span>Producción</span><strong id="partDetailProduction">0</strong></div><div><span>Scrap</span><strong id="partDetailScrapQty">0</strong></div><div><span>Yield</span><strong id="partDetailYield">100%</strong></div><div><span>COPQ</span><strong id="partDetailCopq">$0</strong></div></div>
+            
+            <div class="barcode-card">
+              <div>
+                <p class="eyebrow">Identificación automática</p>
+                <h3>Código de barras del Número de Parte</h3>
+                <p>Contenido exacto: <strong id="barcodePayload">—</strong></p>
+              </div>
+              <div class="barcode-visual"><svg id="partBarcode"></svg></div>
+              <div class="barcode-actions"><button id="printBarcodeBtn" class="btn btn-secondary btn-sm">Imprimir etiqueta</button></div>
+            </div>
+
+            <div class="detail-tabs"><button class="detail-tab active" data-part-tab="operations">Operaciones</button><button class="detail-tab" data-part-tab="machines">Máquinas</button><button class="detail-tab" data-part-tab="cycle-times">Tiempos Ciclo</button><button class="detail-tab" data-part-tab="defects">Defectos</button><button class="detail-tab" data-part-tab="production">Producción</button><button class="detail-tab" data-part-tab="scrap">Scrap</button></div>
+            <div class="part-tab-panel active" data-part-panel="operations">
+              <form id="operationForm" class="inline-form"><input id="operationCode" placeholder="OP20" required><input id="operationName" placeholder="Nombre" required><button class="btn btn-primary">Agregar</button></form><div id="partOperationList" class="entity-list compact"></div>
+            </div>
+            <div class="part-tab-panel" data-part-panel="machines">
+              <form id="partMachineForm" class="inline-form"><select id="partMachineSelect" required></select><span></span><button class="btn btn-primary">Vincular máquina</button></form><div id="partMachineList" class="entity-list compact"></div>
+            </div>
+            <div class="part-tab-panel" data-part-panel="cycle-times">
+              <div class="info-strip">El tiempo ciclo ideal se configura por <strong>NP + Operación + Máquina</strong>. Esto permite que el mismo producto tenga velocidades distintas según el equipo.</div>
+              <form id="cycleTimeForm" class="cycle-time-form">
+                <select id="cycleTimeOperation" required></select>
+                <select id="cycleTimeMachine" required></select>
+                <input id="cycleTimeSeconds" type="number" min="0.01" step="0.01" required placeholder="CT ideal (seg)">
+                <button type="button" id="cancelCycleTimeBtn" class="btn btn-ghost">Salir</button>
+                <button class="btn btn-primary">Guardar CT</button>
+              </form>
+              <div class="table-scroll compact-table"><table><thead><tr><th>Operación</th><th>Máquina</th><th>CT ideal</th><th></th></tr></thead><tbody id="cycleTimeTableBody"></tbody></table></div>
+            </div>
+            <div class="part-tab-panel" data-part-panel="defects"><button id="partAddDefectBtn" class="btn btn-secondary btn-sm">Nuevo defecto</button><div id="partDefectList" class="entity-list compact"></div></div>
+            <div class="part-tab-panel" data-part-panel="production"><div id="partProductionList" class="entity-list compact"></div></div>
+            <div class="part-tab-panel" data-part-panel="scrap"><div id="partScrapList" class="entity-list compact"></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="machinesView" class="view">
+      <div class="split-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">Recursos productivos</p><h3>Máquinas <span id="machineCount" class="count-badge">0</span></h3></div></div>
+          <form id="machineForm" class="stack-form">
+            <input id="machineCode" placeholder="Código · Ej. CMV-005" required>
+            <input id="machineName" placeholder="Descripción / nombre">
+            <button class="btn btn-primary">Agregar máquina</button>
+          </form>
+          <input id="machineSearch" class="search-input" placeholder="Buscar máquina…">
+          <div id="machineList" class="entity-list"></div>
+        </article>
+        <article class="card detail-panel">
+          <div id="machineEmptyState" class="empty-state">Selecciona una máquina para consultar sus productos vinculados.</div>
+          <div id="machineDetail" hidden>
+            <div class="detail-title"><div><p class="eyebrow">Máquina</p><h2 id="machineDetailCode">—</h2><span id="machineDetailName">—</span></div><button id="deleteMachineBtn" class="btn btn-danger btn-sm">Eliminar</button></div>
+            <div class="mini-kpi-grid"><div><span>NP vinculados</span><strong id="machineDetailParts">0</strong></div><div><span>Producción</span><strong id="machineDetailProduction">0</strong></div><div><span>Scrap</span><strong id="machineDetailScrap">0</strong></div><div><span>Yield</span><strong id="machineDetailYield">100%</strong></div></div>
+            <div class="subsection"><div class="card-header"><h3>Números de Parte vinculados</h3></div><div id="machinePartsList" class="entity-list compact"></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="personnelView" class="view">
+      <div class="split-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">Trazabilidad humana</p><h3>Personal <span id="personnelCount" class="count-badge">0</span></h3></div></div>
+          <form id="personnelForm" class="stack-form">
+            <input id="personnelEmployeeNo" placeholder="Número de empleado" required>
+            <input id="personnelName" placeholder="Nombre completo" required>
+            <select id="personnelRole"><option value="operator">Operador</option><option value="supervisor">Supervisor</option><option value="both">Operador / Supervisor</option></select>
+            <button class="btn btn-primary">Agregar personal</button>
+          </form>
+          <input id="personnelSearch" class="search-input" placeholder="Buscar personal…">
+          <div id="personnelList" class="entity-list"></div>
+        </article>
+        <article class="card detail-panel">
+          <div id="personnelEmptyState" class="empty-state">Selecciona una persona para consultar su ficha.</div>
+          <div id="personnelDetail" hidden>
+            <div class="detail-title"><div><p class="eyebrow">Personal</p><h2 id="personnelDetailName">—</h2><span id="personnelDetailNo">—</span></div><button id="deletePersonnelBtn" class="btn btn-danger btn-sm">Desactivar</button></div>
+            <div class="mini-kpi-grid"><div><span>Rol</span><strong id="personnelDetailRole">—</strong></div><div><span>Corridas</span><strong id="personnelDetailRuns">0</strong></div><div><span>Producción</span><strong id="personnelDetailProduction">0</strong></div><div><span>Estado</span><strong id="personnelDetailStatus">Activo</strong></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="catalogView" class="view">
+      <div class="dashboard-tabs catalog-tabs"><button class="dashboard-tab active" data-catalog-tab="defects">Defectos</button><button class="dashboard-tab" data-catalog-tab="downtime">Paros</button></div>
+      <div class="catalog-panel active" data-catalog-panel="defects">
+        <article class="card form-card"><div class="card-header"><div><p class="eyebrow">Maestro de calidad</p><h3>Catálogo de Defectos</h3></div></div><form id="defectForm" class="form-grid"><div class="field"><label>Cliente</label><select id="defectClient" required></select></div><div class="field"><label>Número de Parte</label><select id="defectPartNumber" required></select></div><div class="field"><label>Operación</label><select id="defectOperation"></select></div><div class="field"><label>Código</label><input id="defectCode" required></div><div class="field"><label>Defecto</label><input id="defectName" required></div><div class="field"><label>Categoría</label><select id="defectCategory"><option>Dimensional</option><option>Visual</option><option>Rosca</option><option>Material</option><option>Proceso</option><option>Otro</option></select></div><div class="form-actions full"><button type="button" class="btn btn-ghost form-cancel-btn">Cancelar</button><button class="btn btn-primary">Agregar defecto</button></div></form></article>
+        <article class="card table-card"><div class="card-header"><h3>Defectos configurados</h3><input id="defectSearch" class="search-input small" placeholder="Buscar…"></div><div class="table-scroll"><table><thead><tr><th>Cliente</th><th>NP</th><th>Operación</th><th>Código</th><th>Defecto</th><th>Categoría</th><th></th></tr></thead><tbody id="defectTableBody"></tbody></table></div></article>
+      </div>
+      <div class="catalog-panel" data-catalog-panel="downtime">
+        <article class="card form-card"><div class="card-header"><div><p class="eyebrow">Maestro de mantenimiento</p><h3>Catálogo de Paros</h3></div></div><form id="downtimeReasonForm" class="form-grid"><div class="field"><label>Código</label><input id="downtimeCode" required placeholder="DT-001"></div><div class="field"><label>Motivo de paro</label><input id="downtimeName" required placeholder="Cambio de herramienta"></div><div class="field"><label>Categoría</label><select id="downtimeCategory"><option>Máquina</option><option>Herramienta</option><option>Material</option><option>Calidad</option><option>Setup</option><option>Personal</option><option>Logística</option><option>Otro</option></select></div><div class="field"><label>Tipo</label><select id="downtimeType"><option value="unplanned">No planeado</option><option value="planned">Planeado</option></select></div><div class="form-actions full"><button type="button" class="btn btn-ghost form-cancel-btn">Cancelar</button><button class="btn btn-primary">Agregar paro</button></div></form></article>
+        <article class="card table-card"><div class="card-header"><h3>Paros configurados</h3><input id="downtimeSearch" class="search-input small" placeholder="Buscar…"></div><div class="table-scroll"><table><thead><tr><th>Código</th><th>Motivo</th><th>Categoría</th><th>Tipo</th><th></th></tr></thead><tbody id="downtimeTableBody"></tbody></table></div></article>
+      </div>
+    </section>
+
+    <section id="runsView" class="view">
+      <div class="section-intro">
+        <p class="eyebrow">Production Run</p>
+        <h2>Corridas de Producción</h2>
+        <p>Cada corrida concentra la trazabilidad de producción, calidad, mantenimiento, máquina, lote y personal.</p>
+      </div>
+      <div class="split-layout runs-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">Trazabilidad</p><h3>Corridas <span id="runCount" class="count-badge">0</span></h3></div></div>
+          <input id="runSearch" class="search-input" placeholder="Buscar lote, NP, máquina, operador…">
+          <div id="runList" class="entity-list run-list"></div>
+        </article>
+        <article class="card detail-panel run-detail-panel">
+          <div id="runEmptyState" class="empty-state">Selecciona una corrida para consultar su trazabilidad completa.</div>
+          <div id="runDetail" hidden>
+            <div class="run-detail-header">
+              <div>
+                <p class="eyebrow">Production Run</p>
+                <h2 id="runDetailCode">—</h2>
+                <div class="run-status-line"><span id="runDetailStatus" class="run-status">—</span><span id="runDetailMethod">—</span></div>
+              </div>
+              <div class="run-header-meta"><span>Lote</span><strong id="runDetailLot">—</strong></div>
+            </div>
+
+            <div class="mini-kpi-grid six run-kpis">
+              <div><span>Producción</span><strong id="runDetailProduction">0</strong></div>
+              <div><span>Scrap</span><strong id="runDetailScrap">0</strong></div>
+              <div><span>Yield</span><strong id="runDetailYield">100%</strong></div>
+              <div><span>PPM</span><strong id="runDetailPpm">0</strong></div>
+              <div><span>COPQ</span><strong id="runDetailCopq">$0</strong></div>
+              <div><span>Tiempo Muerto</span><strong id="runDetailDowntime">0 min</strong></div>
+            </div>
+
+            <div class="run-info-grid">
+              <div class="run-info-block"><span>Cliente</span><strong id="runDetailClient">—</strong></div>
+              <div class="run-info-block"><span>Número de Parte</span><strong id="runDetailPart">—</strong></div>
+              <div class="run-info-block"><span>Operación</span><strong id="runDetailOperation">—</strong></div>
+              <div class="run-info-block"><span>Máquina</span><strong id="runDetailMachine">—</strong></div>
+              <div class="run-info-block"><span>CT Ideal</span><strong id="runDetailCycle">—</strong></div>
+              <div class="run-info-block"><span>Turno</span><strong id="runDetailShift">—</strong></div>
+              <div class="run-info-block"><span>Operador</span><strong id="runDetailOperator">—</strong></div>
+              <div class="run-info-block"><span>Supervisor</span><strong id="runDetailSupervisor">—</strong></div>
+              <div class="run-info-block"><span>Registrado</span><strong id="runDetailCreated">—</strong></div>
+              <div class="run-info-block"><span>Completado</span><strong id="runDetailCompleted">—</strong></div>
+            </div>
+
+            <div class="run-section-grid">
+              <section class="run-subsection">
+                <div class="card-header"><div><p class="eyebrow">Calidad</p><h3>Eventos de Calidad</h3></div></div>
+                <div id="runQualityList" class="entity-list compact"></div>
+              </section>
+              <section class="run-subsection">
+                <div class="card-header"><div><p class="eyebrow">Mantenimiento</p><h3>Tiempos Muertos</h3></div></div>
+                <div id="runDowntimeList" class="entity-list compact"></div>
+              </section>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="settingsView" class="view">
+      <div class="section-intro"><p class="eyebrow">Administración</p><h2>Configuración Operativa</h2><p>Define los turnos y el tiempo planificado que GUVEL utilizará para calcular OEE.</p></div>
+      <div class="split-layout settings-layout">
+        <article class="card list-panel">
+          <div class="card-header"><div><p class="eyebrow">OEE</p><h3>Turnos</h3></div></div>
+          <form id="shiftForm" class="stack-form">
+            <input id="shiftCode" placeholder="Código · Ej. A" required>
+            <input id="shiftName" placeholder="Nombre · Ej. Turno A" required>
+            <div class="form-row-2"><div class="field"><label>Inicio</label><input id="shiftStart" type="time" required></div><div class="field"><label>Fin</label><input id="shiftEnd" type="time" required></div></div>
+            <div class="field"><label>Descansos / tiempo planeado excluido (min)</label><input id="shiftBreakMinutes" type="number" min="0" value="0"></div>
+            <button class="btn btn-primary">Guardar turno</button>
+          </form>
+          <div id="shiftList" class="entity-list compact"></div>
+        </article>
+        <article class="card detail-panel">
+          <div class="card-header"><div><p class="eyebrow">Regla OEE</p><h3>Cómo calcula GUVEL</h3></div></div>
+          <div class="oee-rule-grid">
+            <div><span>Planned Production Time</span><strong>Duración de turno − descansos − paros Planned</strong></div>
+            <div><span>Availability</span><strong>(Planificado − paros Unplanned) / Planificado</strong></div>
+            <div><span>Performance</span><strong>Σ(CT ideal × piezas) / Tiempo operativo</strong></div>
+            <div><span>Quality</span><strong>Piezas buenas / piezas producidas</strong></div>
+            <div class="oee-rule-main"><span>OEE</span><strong>Availability × Performance × Quality</strong></div>
+          </div>
+          <div class="info-strip">GUVEL cuenta una sola vez el tiempo planificado por combinación <strong>Máquina + Fecha + Turno</strong>, aunque se fabriquen varios números de parte en el mismo turno.</div>
+        </article>
+      </div>
+    </section>
+
+    <section id="usersView" class="view admin-only" hidden>
+      <div class="section-intro users-page-intro">
         <div>
-          <p class="section-eyebrow">RESUMEN GENERAL</p>
-          <h2>Dashboard de calibración</h2>
-          <p>Estado actual de los equipos registrados en el sistema.</p>
+          <p class="eyebrow">Seguridad</p>
+          <h2>Usuarios</h2>
+          <p>Administra el acceso de tu empresa y asigna el nivel de permiso de cada usuario.</p>
         </div>
+        <div class="security-status"><span class="security-dot"></span><span>Control de acceso activo</span></div>
       </div>
 
-      <div class="summary-grid">
-        <article class="summary-card total-card"><span class="summary-label">Equipos registrados</span><strong id="totalEquipment" class="summary-number">0</strong></article>
-        <article class="summary-card calibrated-card"><span class="summary-label">Calibrados</span><strong id="calibratedEquipment" class="summary-number">0</strong></article>
-        <article class="summary-card warning-card"><span class="summary-label">Por vencer</span><strong id="warningEquipment" class="summary-number">0</strong></article>
-        <article class="summary-card expired-card"><span class="summary-label">Vencidos</span><strong id="expiredEquipment" class="summary-number">0</strong></article>
+      <div class="user-role-grid users-role-strip">
+        <div class="role-info role-admin"><div class="role-code">A</div><div><strong>Admin</strong><span>Control total · Usuarios · Configuración</span></div></div>
+        <div class="role-info role-manager"><div class="role-code">M</div><div><strong>Manager</strong><span>Maestros · Configuración · Operación</span></div></div>
+        <div class="role-info role-supervisor"><div class="role-code">S</div><div><strong>Supervisor</strong><span>Producción · Calidad · Paros</span></div></div>
+        <div class="role-info role-guest"><div class="role-code">G</div><div><strong>Guest</strong><span>Visualización · Filtros · Historial</span></div></div>
       </div>
 
-      <section class="dashboard-controls" aria-label="Filtros del Dashboard">
-        <div class="filter-field">
-          <label for="locationFilter">Ubicación</label>
-          <select id="locationFilter"><option value="">Todas las ubicaciones</option></select>
-        </div>
-        <div class="filter-field">
-          <label for="brandFilter">Marca</label>
-          <select id="brandFilter"><option value="">Todas las marcas</option></select>
-        </div>
-        <button id="clearFiltersButton" class="secondary-button" type="button">Limpiar filtros</button>
-      </section>
-
-      <section class="status-chart-section">
-        <div class="panel-heading"><div><p class="section-eyebrow">ESTADO GENERAL</p><h3>Distribución de calibración</h3></div></div>
-        <div class="status-chart-layout">
-          <div id="statusDonut" class="status-donut" role="img" aria-label="Gráfica de distribución del estado de calibración">
-            <div class="status-donut-center"><strong id="chartTotal">0</strong><span>equipos</span></div>
+      <div class="users-layout">
+        <article class="card user-create-card">
+          <div class="card-header">
+            <div><p class="eyebrow">Nuevo acceso</p><h3>Asignar usuario</h3><p class="card-subtitle">El correo debe existir primero en Supabase Authentication.</p></div>
           </div>
-          <div class="chart-legend">
-            <div class="legend-item"><span class="legend-color calibrated-color"></span><span>Calibrados</span><strong id="chartCalibrated">0%</strong></div>
-            <div class="legend-item"><span class="legend-color warning-color"></span><span>Por vencer</span><strong id="chartWarning">0%</strong></div>
-            <div class="legend-item"><span class="legend-color expired-color"></span><span>Vencidos</span><strong id="chartExpired">0%</strong></div>
+          <form id="userAssignForm" class="user-create-form">
+            <div class="field"><label>Correo</label><input id="userAssignEmail" type="email" placeholder="usuario@empresa.com" required></div>
+            <div class="field"><label>Nombre visible</label><input id="userAssignName" placeholder="Nombre del usuario"></div>
+            <div class="field"><label>Rol</label><select id="userAssignRole"><option value="guest" selected>Guest</option><option value="supervisor">Supervisor</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+            <button class="btn btn-primary" type="submit"><span>Asignar usuario</span></button>
+          </form>
+          <div class="user-admin-note"><strong>Flujo seguro:</strong> crea o invita al usuario en Supabase Authentication y después asígnalo aquí. GUVEL nunca expone una service key.</div>
+        </article>
+
+        <article class="card users-list-card">
+          <div class="card-header users-list-header">
+            <div><p class="eyebrow">Accesos</p><h3>Usuarios de la empresa <span id="usersCount" class="count-badge">0</span></h3></div>
+            <button id="refreshUsersBtn" class="btn btn-secondary btn-sm" type="button">Actualizar</button>
           </div>
-        </div>
-      </section>
-
-      <div class="dashboard-grid">
-        <section class="dashboard-panel">
-          <div class="panel-heading"><div><p class="section-eyebrow">DISTRIBUCIÓN</p><h3>Equipos por ubicación</h3></div></div>
-          <div id="locationList" class="location-list"></div>
-        </section>
-        <section class="dashboard-panel">
-          <div class="panel-heading"><div><p class="section-eyebrow">CALIBRACIONES</p><h3>Próximos vencimientos</h3></div></div>
-          <div id="upcomingList" class="upcoming-list"></div>
-        </section>
+          <div class="table-scroll">
+            <table class="users-table">
+              <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
+              <tbody id="usersAdminBody"></tbody>
+            </table>
+          </div>
+        </article>
       </div>
-
-      <div class="dashboard-action"><button id="dashboardSearchButton" class="dashboard-search-button" type="button">Buscar equipo</button></div>
     </section>
 
-    <section id="equipmentCard" class="equipment-card" hidden>
-      <div class="equipment-toolbar"><button id="backToDashboardButton" class="back-button" type="button">Volver al Dashboard</button></div>
-      <div class="card-header">
-        <div><p id="equipmentType" class="equipment-type"></p><h2 id="equipmentDescription"></h2><p id="equipmentId" class="equipment-id"></p></div>
-        <div id="statusBadge" class="status-badge">SIN ESTATUS</div>
+
+    <section id="historyView" class="view audit-history-view">
+      <div class="section-intro">
+        <div>
+          <p class="eyebrow">AUDIT TRAIL</p>
+          <h2>Historial de Cambios</h2>
+          <p>Registro de quién hizo qué, cuándo y sobre qué información dentro de GUVEL.</p>
+        </div>
+        <div class="audit-status"><span class="status-dot"></span><strong>Auditoría activa</strong></div>
       </div>
-      <div id="statusProgress" class="status-progress progress-sin-fecha">
-        <div class="status-progress-header"><strong id="statusProgressLabel">SIN FECHA</strong><span id="statusProgressDetail">Sin fecha de vencimiento</span></div>
-        <div class="status-progress-track"><div id="statusProgressFill" class="status-progress-fill"></div></div>
+
+      <article class="card audit-summary-card">
+        <div class="audit-summary-item"><span>Eventos registrados</span><strong id="auditCount">0</strong></div>
+        <div class="audit-summary-item"><span>Último cambio</span><strong id="auditLastChange">—</strong></div>
+        <div class="audit-summary-item"><span>Usuario</span><strong id="auditLastUser">—</strong></div>
+        <div class="audit-summary-item"><span>Empresa</span><strong id="auditCompany">—</strong></div>
+      </article>
+
+      <article class="card table-card audit-table-card">
+        <div class="card-header">
+          <div>
+            <p class="eyebrow">AUDIT TRAIL</p>
+            <h3>Actividad del sistema</h3>
+          </div>
+          <div class="audit-actions">
+            <input id="auditSearch" class="search-input small" placeholder="Buscar usuario, tabla, acción…">
+            <select id="auditActionFilter" class="audit-filter">
+              <option value="">Todas las acciones</option>
+              <option value="INSERT">Creación</option>
+              <option value="UPDATE">Modificación</option>
+              <option value="DELETE">Eliminación</option>
+            </select>
+            <button id="refreshAuditBtn" class="btn btn-secondary btn-sm">Actualizar</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Fecha / Hora</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Módulo</th>
+                <th>Registro</th>
+                <th>Cambios</th>
+              </tr>
+            </thead>
+            <tbody id="auditHistoryBody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <div id="auditDetailModal" class="modal-backdrop" hidden>
+        <article class="card audit-detail-modal">
+          <div class="card-header">
+            <div><p class="eyebrow">DETALLE</p><h3 id="auditDetailTitle">Cambio</h3></div>
+            <button class="icon-btn" data-close-audit>×</button>
+          </div>
+          <div id="auditDetailBody" class="audit-detail-body"></div>
+        </article>
       </div>
-      <div class="equipment-image-container"><img id="equipmentImage" class="equipment-image" src="imagenes/sin-imagen.jpg" alt="Fotografía del equipo" /></div>
-      <div class="card-grid">
-        <div class="field"><span>Marca</span><strong id="brand"></strong></div>
-        <div class="field"><span>Alcance / Rango</span><strong id="model"></strong></div>
-        <div class="field"><span>Número de serie</span><strong id="serial"></strong></div>
-        <div class="field"><span>Ubicación</span><strong id="location"></strong></div>
-        <div class="field"><span>Estado del equipo</span><strong id="responsible"></strong></div>
-        <div class="field"><span>Frecuencia</span><strong id="frequency"></strong></div>
-        <div class="field"><span>Fecha de calibración</span><strong id="lastCalibration"></strong></div>
-        <div class="field"><span>Fecha de vencimiento</span><strong id="nextCalibration"></strong></div>
-      </div>
-      <div id="daysPanel" class="days-panel"><span>Días restantes</span><strong id="daysRemaining"></strong></div>
-      <div class="actions">
-        <a id="certificateButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Abrir certificado PDF</a>
-        <button id="copyLinkButton" class="secondary-button" type="button">Copiar enlace de esta ficha</button>
-        <button id="printEquipmentButton" class="secondary-button" type="button">Imprimir ficha</button>
-      </div>
+    </section>
+    <section id="dataView" class="view">
+      <div class="history-tabs"><button class="history-tab active" data-history-tab="production">Producción</button><button class="history-tab" data-history-tab="scrap">Scrap / Calidad</button><button class="history-tab" data-history-tab="downtime">Tiempos Muertos</button></div>
+      <article class="card table-card history-panel active" data-history-panel="production"><div class="card-header"><div><p class="eyebrow">Trazabilidad</p><h3>Historial de Producción</h3></div><input id="productionHistorySearch" class="search-input small" placeholder="Buscar…"></div><div class="table-scroll"><table><thead><tr><th>Fecha/Hora</th><th>Turno</th><th>Lote</th><th>Cliente</th><th>NP</th><th>Operación</th><th>Máquina</th><th>Operador</th><th>Estado</th><th>Producción</th><th>Scrap</th><th>Yield</th><th></th></tr></thead><tbody id="productionHistoryBody"></tbody></table></div></article>
+      <article class="card table-card history-panel" data-history-panel="scrap"><div class="card-header"><div><p class="eyebrow">Trazabilidad</p><h3>Historial de Scrap</h3></div><input id="scrapHistorySearch" class="search-input small" placeholder="Buscar…"></div><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Cliente</th><th>NP</th><th>Operación</th><th>Defecto</th><th>Cantidad</th><th>Disposición</th><th>COPQ</th><th></th></tr></thead><tbody id="scrapHistoryBody"></tbody></table></div></article>
+    <article class="card table-card history-panel" data-history-panel="downtime"><div class="card-header"><div><p class="eyebrow">Mantenimiento</p><h3>Historial de Tiempos Muertos</h3></div></div><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Cliente</th><th>NP</th><th>Máquina</th><th>Paro</th><th>Tipo</th><th>Minutos</th></tr></thead><tbody id="downtimeHistoryBody"></tbody></table></div></article>
     </section>
   </main>
 
-  <footer><p>Metrics Works · Calibration Management System</p></footer>
-  <script src="app.js"></script>
+  <footer class="app-footer">
+    <div class="footer-brand">
+      <img src="assets/img/guvel-logo.jpeg" alt="GUVEL">
+      <span><strong>GUVEL Platform</strong> · Production & Quality · Smarter Quality Solutions</span>
+    </div>
+    <span>Design System · Sprint 1</span>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="authOverlay" class="auth-overlay">
+    <form id="loginForm" class="login-card">
+      <div class="login-brand guvel-login-brand"><img class="login-logo" src="assets/img/guvel-logo.jpeg" alt="GUVEL"><div><strong>GUVEL General System</strong><small>Smarter Quality Solutions</small></div></div>
+      <p class="eyebrow">Acceso seguro</p><h2>Iniciar sesión</h2>
+      <div class="field"><label>Correo</label><input type="email" id="loginEmail" required></div>
+      <div class="field"><label>Contraseña</label><input type="password" id="loginPassword" required></div>
+      <button class="btn btn-primary btn-block">Ingresar</button>
+      <p id="authMessage" class="auth-message"></p>
+      <small class="version-note">GUVEL General System · v1.4.3 · Sprint 1 · Multiempresa</small>
+    </form>
+  </div>
 </body>
 </html>
