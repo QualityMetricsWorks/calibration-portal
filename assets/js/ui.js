@@ -51,13 +51,49 @@ export function updateScrapDefects(){
 }
 function activeRuns(){return filteredRuns({start:$('filterStart')?.value,end:$('filterEnd')?.value,clientId:$('filterClient')?.value,partId:$('filterPartNumber')?.value}).filter(r=>!$('filterMachine')?.value||r.machineId===$('filterMachine').value)}
 function renderGeneralSix(runs){const m=metricsForRuns(runs),o=oeeMetrics(runs);if($('generalOeeValue'))$('generalOeeValue').textContent=o.available?percent(o.oee):'—';if($('generalProductionValue'))$('generalProductionValue').textContent=number(m.produced)}
+function previousPeriodRange(start,end){
+ if(!start||!end)return null;
+ const s=new Date(start+'T00:00:00'),e=new Date(end+'T00:00:00');
+ const days=Math.max(1,Math.round((e-s)/86400000)+1);
+ const ps=new Date(s),pe=new Date(e);
+ ps.setDate(ps.getDate()-days);pe.setDate(pe.getDate()-days);
+ return {start:isoDate(ps),end:isoDate(pe)};
+}
+function isoDate(d){return d.toISOString().slice(0,10)}
+function setKpiComparison(id,current,previous,lowerIsBetter=false){
+ const el=$(id);if(!el)return;
+ const host=el.closest('.kpi-card')||el.parentElement;
+ let node=host?.querySelector('.kpi-comparison');
+ if(!node){node=document.createElement('small');node.className='kpi-comparison';host?.appendChild(node)}
+ if(previous===null||previous===undefined){node.textContent='';return}
+ const delta=previous===0?(current===0?0:null):(current-previous)/Math.abs(previous)*100;
+ if(delta===null){node.textContent='—';node.className='kpi-comparison neutral';return}
+ const improved=lowerIsBetter?delta<0:delta>0;
+ node.textContent=delta===0?'→ 0.0%':`${delta>0?'↑':'↓'} ${Math.abs(delta).toFixed(1)}%`;
+ node.className=`kpi-comparison ${delta===0?'neutral':improved?'positive':'negative'}`;
+}
+function renderKpiComparisons(){
+ const period=$('filterPeriod')?.value,start=$('filterStart')?.value,end=$('filterEnd')?.value;
+ if(!start||!end||period==='custom'||period==='current'){['kpiOee','kpiProduction','kpiScrap','kpiPpm','kpiYield','kpiCopq'].forEach(id=>setKpiComparison(id,null,null));return}
+ const prev=previousPeriodRange(start,end);if(!prev)return;
+ const prevRuns=filteredRuns({start:prev.start,end:prev.end,clientId:$('filterClient')?.value,partId:$('filterPartNumber')?.value});
+ const currentRuns=activeRuns();
+ const cm=metricsForRuns(currentRuns),pm=metricsForRuns(prevRuns);
+ const co=oeeMetrics(currentRuns),po=oeeMetrics(prevRuns);
+ setKpiComparison('kpiOee',co.available?co.oee:0,po.available?po.oee:0);
+ setKpiComparison('kpiProduction',cm.produced,pm.produced);
+ setKpiComparison('kpiScrap',cm.scrapRate,pm.scrapRate,true);
+ setKpiComparison('kpiPpm',cm.ppm,pm.ppm,true);
+ setKpiComparison('kpiYield',cm.yieldRate,pm.yieldRate);
+ setKpiComparison('kpiCopq',cm.copq,pm.copq,true);
+}
 export function renderDashboard(){
  const runs=activeRuns(),m=metricsForRuns(runs);$('kpiProduction').textContent=number(m.produced);$('kpiScrap').textContent=percent(m.scrapRate);$('kpiScrapQty').textContent=`${number(m.scrap)} piezas`;$('kpiPpm').textContent=number(Math.round(m.ppm));$('kpiYield').textContent=percent(m.yieldRate);$('kpiCopq').textContent=money(m.copq,'USD');
  const de=state.downtimeEvents.filter(e=>runs.some(r=>r.id===e.runId));const mins=de.reduce((s,e)=>s+e.minutes,0);$('kpiDowntime').textContent=`${number(mins)} min`;$('kpiDowntimeEvents').textContent=number(de.length);
  const oee=oeeMetrics(runs);$('kpiOee').textContent=oee.available?percent(oee.oee):'—';$('kpiOeeNote').textContent=oee.available?'Availability × Performance × Quality':oee.reason;
  $('kpiProdOee').textContent=oee.available?percent(oee.oee):'—';$('kpiProdOeeNote').textContent=oee.available?`${number(Math.round(oee.plannedMinutes))} min planificados`:oee.reason;
  $('kpiAvailability').textContent=oee.available?percent(oee.availability):'—';$('kpiPerformance').textContent=oee.available?percent(oee.performance):'—';$('kpiQuality').textContent=oee.available?percent(oee.quality):percent(oee.quality||0);
- renderCharts(runs,de);renderTopProducts(runs);renderCustomDashboard('production',runs,de);renderCustomDashboard('scrap',runs,de);renderCustomDashboard('maintenance',runs,de);
+ renderCharts(runs,de);renderTopProducts(runs);renderKpiComparisons();renderCustomDashboard('production',runs,de);renderCustomDashboard('scrap',runs,de);renderCustomDashboard('maintenance',runs,de);
 }
 
 const dashboardSettingsKey='guvel.dashboard.settings.v146';
