@@ -30,7 +30,7 @@
 
       <div class="product-context">
         <span class="module-badge"><span class="module-dot"></span> Production & Quality</span>
-        <span class="version-badge">v1.4.7</span>
+        <span class="version-badge">v1.4.8.4</span>
         <div class="language-control">
           <button id="languageMenuBtn" class="language-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Idioma / Language">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-3.1a15.7 15.7 0 0 0-1.4-3.5A8.1 8.1 0 0 1 18.9 8ZM12 4c.8 1 1.5 2.3 1.9 4h-3.8C10.5 6.3 11.2 5 12 4ZM4.3 14a8 8 0 0 1 0-4h3.4a16.7 16.7 0 0 0 0 4H4.3Zm.8 2h3.1a15.7 15.7 0 0 0 1.4 3.5A8.1 8.1 0 0 1 5.1 16Zm3.1-8H5.1a8.1 8.1 0 0 1 4.5-3.5A15.7 15.7 0 0 0 8.2 8ZM12 20c-.8-1-1.5-2.3-1.9-4h3.8c-.4 1.7-1.1 3-1.9 4Zm2.3-6H9.7a14.6 14.6 0 0 1 0-4h4.6a14.6 14.6 0 0 1 0 4Zm.1 5.5a15.7 15.7 0 0 0 1.4-3.5h3.1a8.1 8.1 0 0 1-4.5 3.5ZM16.3 14a16.7 16.7 0 0 0 0-4h3.4a8 8 0 0 1 0 4h-3.4Z"/></svg>
@@ -142,7 +142,7 @@
         <button class="dashboard-tab" data-dashboard-tab="maintenance">Mantenimiento</button>
       </div>
       <div class="filter-panel card dashboard-filter-panel compact-filters">
-        <div class="field"><label>Periodo</label><select id="filterPeriod"><option value="current">Actual</option><option value="previous_week">Semana anterior</option><option value="previous_day">Día anterior</option><option value="previous_month">Mes anterior</option><option value="previous_quarter">Trimestre anterior</option><option value="previous_half">Semestre anterior</option><option value="previous_year">Año anterior</option><option value="custom">Personalizado</option></select></div>
+        <div class="field"><label>Periodo</label><select id="filterPeriod"><option value="current">Actual</option><option value="today">Hoy</option><option value="current_week">Esta semana</option><option value="current_month">Este mes</option><option value="previous_week">Semana anterior</option><option value="previous_day">Día anterior</option><option value="previous_month">Mes anterior</option><option value="previous_quarter">Trimestre anterior</option><option value="previous_half">Semestre anterior</option><option value="previous_year">Año anterior</option><option value="custom">Personalizado</option></select></div>
         <div class="field custom-date-field"><label>Desde</label><input type="date" id="filterStart"></div>
         <div class="field custom-date-field"><label>Hasta</label><input type="date" id="filterEnd"></div>
         <div class="field"><label>Cliente</label><select id="filterClient"></select></div>
@@ -157,16 +157,17 @@
           <article class="kpi-card danger"><span>Scrap</span><strong id="kpiScrap">0.00%</strong><small id="kpiScrapQty">0 piezas</small></article>
           <article class="kpi-card warning"><span>PPM</span><strong id="kpiPpm">0</strong><small>Scrap / producción</small></article>
           <article class="kpi-card success"><span>Yield</span><strong id="kpiYield">100.00%</strong><small>Buenas / producción</small></article>
-          <article class="kpi-card money"><span>COPQ Scrap</span><strong id="kpiCopq">$0.00</strong><small>Costo estándar estimado</small></article>
+          <article class="kpi-card money"><span>COPQ Scrap</span><strong id="kpiCopq">$0.00</strong><small id="kpiCopqUsd">Costo estándar estimado</small></article>
         </div>
-        <div class="dashboard-grid">
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">Tendencia</p><h3>Scrap %</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="general" data-dashboard-metric="scrap" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="scrapTrendChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">Tendencia</p><h3>PPM</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="general" data-dashboard-metric="ppm" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="ppmTrendChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">Tendencia</p><h3>Yield</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="general" data-dashboard-metric="yield" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="yieldTrendChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">Tendencia</p><h3>COPQ Scrap</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="general" data-dashboard-metric="copq" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="copqTrendChart"></canvas></div></article>
+        <div class="dashboard-grid general-six-charts">
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>OEE</h3></div><div class="chart-wrap"><canvas id="oeeTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Producción</h3></div><div class="chart-wrap"><canvas id="generalProductionTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap %</h3></div><div class="chart-wrap"><canvas id="scrapTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>PPM</h3></div><div class="chart-wrap"><canvas id="ppmTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Yield</h3></div><div class="chart-wrap"><canvas id="yieldTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>COPQ</h3></div><div class="chart-wrap"><canvas id="copqTrendChart"></canvas></div></article>
         </div>
-        <article class="card section-card"><div class="card-header"><div><p class="eyebrow">Concentración de pérdida</p><h3>Top 3 productos con mayor scrap</h3></div></div><div id="topProductsGrid" class="top-products-grid"></div></article>
-      <div class="custom-dashboard-host" data-custom-dashboard-host="general"></div>
+
       </div>
       <div class="dashboard-panel" data-dashboard-panel="production">
         <div class="section-intro"><p class="eyebrow">Producción</p><h2>OEE y Desempeño</h2><p>Disponibilidad, Performance y Quality calculados con los turnos, CT ideal y paros registrados.</p></div>
@@ -181,11 +182,12 @@
       </div>
       <div class="dashboard-panel" data-dashboard-panel="scrap">
         <div class="section-intro"><p class="eyebrow">Calidad</p><h2>Calidad</h2><p>Distribución y priorización de pérdidas por defecto y Número de Parte.</p></div>
-        <div class="dashboard-grid">
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por defecto</h3><button class="dashboard-chart-settings" data-dashboard-settings="scrap" data-dashboard-metric="defect_pie" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="scrapDefectPieChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por Número de Parte</h3><button class="dashboard-chart-settings" data-dashboard-settings="scrap" data-dashboard-metric="part_pie" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="scrapPartPieChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por defecto</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="scrap" data-dashboard-metric="defect_pareto" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="scrapDefectParetoChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por Número de Parte</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="scrap" data-dashboard-metric="part_pareto" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="scrapPartParetoChart"></canvas></div></article>
+        
+        <article class="card section-card quality-top-scrap-card"><div class="card-header"><div><p class="eyebrow">Concentración de pérdida</p><h3>Top 3 productos con mayor scrap</h3></div></div><div id="topProductsGrid" class="top-products-grid"></div></article><div class="dashboard-grid">
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por defecto</h3></div><div class="chart-wrap"><canvas id="scrapDefectPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por Número de Parte</h3></div><div class="chart-wrap"><canvas id="scrapPartPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por defecto</h3></div></div><div class="chart-wrap"><canvas id="scrapDefectParetoChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por Número de Parte</h3></div></div><div class="chart-wrap"><canvas id="scrapPartParetoChart"></canvas></div></article>
         </div>
       <div class="custom-dashboard-host" data-custom-dashboard-host="scrap"></div>
       </div>
@@ -193,10 +195,10 @@
         <div class="section-intro"><p class="eyebrow">Mantenimiento</p><h2>Tiempos Muertos</h2><p>Distribución y priorización de paros registrados durante producción.</p></div>
         <div class="kpi-grid"><article class="kpi-card warning"><span>Tiempo muerto</span><strong id="kpiDowntime">0 min</strong><small>Periodo seleccionado</small></article><article class="kpi-card"><span>Eventos</span><strong id="kpiDowntimeEvents">0</strong><small>Paros registrados</small></article></div>
         <div class="dashboard-grid">
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Paros por motivo</h3><button class="dashboard-chart-settings" data-dashboard-settings="maintenance" data-dashboard-metric="reason_pie" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="downtimeReasonPieChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Paros por máquina</h3><button class="dashboard-chart-settings" data-dashboard-settings="maintenance" data-dashboard-metric="machine_pie" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="downtimeMachinePieChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto de paros</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="maintenance" data-dashboard-metric="reason_pareto" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="downtimeReasonParetoChart"></canvas></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por máquina</h3></div><button class="dashboard-chart-settings" data-dashboard-settings="maintenance" data-dashboard-metric="machine_pareto" title="Configurar meta">⚙</button></div><div class="chart-wrap"><canvas id="downtimeMachineParetoChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Paros por motivo</h3></div><div class="chart-wrap"><canvas id="downtimeReasonPieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Paros por máquina</h3></div><div class="chart-wrap"><canvas id="downtimeMachinePieChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto de paros</h3></div></div><div class="chart-wrap"><canvas id="downtimeReasonParetoChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por máquina</h3></div></div><div class="chart-wrap"><canvas id="downtimeMachineParetoChart"></canvas></div></article>
         </div>
       <div class="custom-dashboard-host" data-custom-dashboard-host="maintenance"></div>
       </div>
@@ -380,7 +382,7 @@
           <div class="card-header"><div><p class="eyebrow">Maestro</p><h3>Números de Parte <span id="partCount" class="count-badge">0</span></h3></div></div>
           <form id="partForm" class="stack-form">
             <select id="partClient" required></select><input id="partNumberName" placeholder="Número de parte" required><input id="partDescription" placeholder="Descripción">
-            <div class="form-row-2"><input id="partCost" type="number" min="0" step="0.0001" placeholder="Costo por pieza"><select id="partCurrency"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
+            <div class="form-row-3"><input id="partCost" type="number" min="0" step="0.0001" placeholder="Costo por pieza"><input id="partScrapCost" type="number" min="0" step="0.0001" placeholder="Costo de chatarra"><select id="partCurrency"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
             <button class="btn btn-primary">Agregar NP</button>
           </form>
           <input id="partSearch" class="search-input" placeholder="Buscar número de parte…">
@@ -393,7 +395,7 @@
             <form id="partEditForm" class="edit-panel" hidden>
               <div class="form-grid">
                 <div class="field"><label>Descripción</label><input id="editPartDescription"></div>
-                <div class="field"><label>Costo por pieza</label><input id="editPartCost" type="number" min="0" step="0.0001"></div>
+                <div class="field"><label>Costo por pieza</label><input id="editPartCost" type="number" min="0" step="0.0001"></div><div class="field"><label>Costo de chatarra</label><input id="editPartScrapCost" type="number" min="0" step="0.0001"></div>
                 <div class="field"><label>Moneda</label><select id="editPartCurrency"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
                 <div class="form-actions"><button type="button" id="cancelPartEditBtn" class="btn btn-ghost">Salir</button><button class="btn btn-primary">Guardar cambios</button></div>
               </div>
@@ -717,8 +719,8 @@
       <div class="field"><label>Contraseña</label><input type="password" id="loginPassword" required></div>
       <button class="btn btn-primary btn-block">Ingresar</button>
       <p id="authMessage" class="auth-message"></p>
-      <small class="version-note">GUVEL General System · v1.4.7 · Sprint 1 · Multiempresa</small>
+      <small class="version-note">GUVEL General System · v1.4.8.4 · Sprint 1 · Multiempresa</small>
     </form>
   </div>
-<div id="dashboardSettingsModal" class="modal-backdrop" hidden><div class="modal dashboard-settings-modal" role="dialog" aria-modal="true" aria-labelledby="dashboardSettingsTitle"><div class="modal-header"><div><p class="eyebrow">Dashboard</p><h2 id="dashboardSettingsTitle">Configuración de rango</h2></div><button id="closeDashboardSettingsBtn" class="icon-btn" type="button">×</button></div><form id="dashboardSettingsForm" class="form-grid"><div class="field"><label>Indicador</label><select id="dashboardMetricSelect"></select></div><div class="field"><label>Mínimo</label><input id="dashboardMin" type="number" step="any" required></div><div class="field"><label>Máximo</label><input id="dashboardMax" type="number" step="any" required></div><div class="field"><label>Meta</label><input id="dashboardTarget" type="number" step="any" required></div><div class="form-actions full"><button type="button" id="cancelDashboardSettingsBtn" class="btn btn-ghost">Cancelar</button><button class="btn btn-primary">Guardar configuración</button></div></form><small class="modal-help">La meta se muestra como una línea horizontal y la configuración se conserva por navegador y dashboard.</small></div></div><div id="customDashboardModal" class="modal-backdrop" hidden><article class="card custom-dashboard-modal"><div class="card-header"><div><p class="eyebrow">Dashboard adicional</p><h3 id="customDashboardModalTitle">Añadir dashboard</h3></div><button class="icon-btn" id="closeCustomDashboardModalBtn" type="button">×</button></div><form id="customDashboardForm" class="form-grid"><div class="field"><label>Nombre</label><input id="customDashboardName" maxlength="60" placeholder="Ej. Línea 1" required></div><div class="field"><label>Visualización</label><select id="customDashboardMetric" required></select></div><div class="field"><label>Distribución</label><select id="customDashboardSpan"><option value="1">1 columna</option><option value="2">2 columnas</option><option value="3">3 columnas</option></select></div><input id="customDashboardId" type="hidden"><input id="customDashboardKind" type="hidden"><div class="form-actions full"><button type="button" class="btn btn-ghost" id="cancelCustomDashboardBtn">Cancelar</button><button class="btn btn-primary">Guardar dashboard</button></div></form></article></div></body>
+<div id="dashboardSettingsModal" class="modal-backdrop" hidden><div class="modal dashboard-settings-modal" role="dialog" aria-modal="true" aria-labelledby="dashboardSettingsTitle"><div class="modal-header"><div><p class="eyebrow">Dashboard</p><h2 id="dashboardSettingsTitle">Configuración de rango</h2></div><button id="closeDashboardSettingsBtn" class="icon-btn" type="button">×</button></div><form id="dashboardSettingsForm" class="form-grid"><div class="field"><label>Indicador</label><select id="dashboardMetricSelect"></select></div><div class="field"><label>Mínimo</label><input id="dashboardMin" type="number" step="any" required></div><div class="field"><label>Máximo</label><input id="dashboardMax" type="number" step="any" required></div><div class="field"><label>Meta</label><input id="dashboardTarget" type="number" step="any" required></div><div class="form-actions full"><button type="button" id="cancelDashboardSettingsBtn" class="btn btn-ghost">Cancelar</button><button class="btn btn-primary">Guardar configuración</button></div></form><small class="modal-help">La meta se muestra como una línea horizontal y la configuración se conserva por navegador y dashboard.</small></div></div><div id="customDashboardModal" class="modal-backdrop" hidden><article class="card custom-dashboard-modal"><div class="card-header"><div><p class="eyebrow">Dashboard adicional</p><h3 id="customDashboardModalTitle">Añadir dashboard</h3></div><button class="icon-btn" id="closeCustomDashboardModalBtn" type="button">×</button></div><form id="customDashboardForm" class="form-grid"><div class="field"><label>Cliente</label><select id="customDashboardClient" required></select></div><div class="field"><label>Número de Parte</label><select id="customDashboardPart"><option value="">Todos los números de parte</option></select></div><div class="field"><label>Nombre</label><input id="customDashboardName" maxlength="60" placeholder="Ej. Línea 1" required></div><div class="field"><label>Visualización</label><select id="customDashboardMetric" required></select></div><div class="field"><label>Distribución</label><select id="customDashboardSpan"><option value="1">1 columna</option><option value="2">2 columnas</option><option value="3">3 columnas</option></select></div><input id="customDashboardId" type="hidden"><input id="customDashboardKind" type="hidden"><div class="form-actions full"><button type="button" class="btn btn-ghost" id="cancelCustomDashboardBtn">Cancelar</button><button class="btn btn-primary">Guardar dashboard</button></div></form></article></div></body>
 </html>

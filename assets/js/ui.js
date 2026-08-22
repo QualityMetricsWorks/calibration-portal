@@ -50,13 +50,58 @@ export function updateScrapDefects(){
  renderRunScrapEvents();
 }
 function activeRuns(){return filteredRuns({start:$('filterStart')?.value,end:$('filterEnd')?.value,clientId:$('filterClient')?.value,partId:$('filterPartNumber')?.value}).filter(r=>!$('filterMachine')?.value||r.machineId===$('filterMachine').value)}
+function localDateString(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function dateFromInput(s){const p=String(s||'').split('-').map(Number);return p.length===3&&p.every(Boolean)?new Date(p[0],p[1]-1,p[2]):null}
+function previousPeriodRange(period,start,end){
+ const s=dateFromInput(start),e=dateFromInput(end);if(!s||!e)return null;
+ let ps,pe;
+ if(period==='today'||period==='previous_day'){ps=new Date(s);ps.setDate(ps.getDate()-1);pe=new Date(ps)}
+ else if(period==='current_week'||period==='previous_week'){pe=new Date(s);pe.setDate(pe.getDate()-1);ps=new Date(pe);ps.setDate(ps.getDate()-6)}
+ else if(period==='current_month'||period==='previous_month'){ps=new Date(s.getFullYear(),s.getMonth()-1,1);pe=new Date(s.getFullYear(),s.getMonth(),0)}
+ else if(period==='previous_quarter'){const q=Math.floor(s.getMonth()/3)-1;ps=new Date(s.getFullYear(),q*3,1);pe=new Date(s.getFullYear(),q*3+3,0)}
+ else if(period==='previous_half'){const h=s.getMonth()<6?0:1;ps=new Date(h?s.getFullYear()-1: s.getFullYear(),h?0:6,1);pe=new Date(ps.getFullYear(),ps.getMonth()+6,0)}
+ else if(period==='previous_year'){ps=new Date(s.getFullYear()-1,0,1);pe=new Date(s.getFullYear()-1,11,31)}
+ else return null;
+ return {start:localDateString(ps),end:localDateString(pe)}
+}
+function setKpiComparison(id,current,previous,lowerIsBetter=false){
+ const el=$(id),host=el?.closest('.kpi-card');if(!el||!host)return;
+ let node=host.querySelector('.kpi-comparison');if(!node){node=document.createElement('small');node.className='kpi-comparison';host.appendChild(node)}
+ if(previous===null||previous===undefined||current===null||current===undefined){node.textContent='';return}
+ const delta=previous===0?(current===0?0:null):(current-previous)/Math.abs(previous)*100;
+ if(delta===null){node.textContent='—';node.className='kpi-comparison neutral';return}
+ const improved=lowerIsBetter?delta<0:delta>0;
+ node.textContent=delta===0?'→ 0.0%':`${delta>0?'↑':'↓'} ${Math.abs(delta).toFixed(1)}%`;
+ node.className=`kpi-comparison ${delta===0?'neutral':improved?'positive':'negative'}`;
+}
+function renderKpiComparisons(){
+ const period=$('filterPeriod')?.value,start=$('filterStart')?.value,end=$('filterEnd')?.value;
+ const ids=['kpiOee','kpiProduction','kpiScrap','kpiPpm','kpiYield','kpiCopq'];
+ if(!period||period==='current'||period==='custom'||!start||!end){ids.forEach(id=>setKpiComparison(id,null,null));return}
+ const prev=previousPeriodRange(period,start,end);if(!prev){ids.forEach(id=>setKpiComparison(id,null,null));return}
+ const currentRuns=activeRuns();
+ const prevRuns=filteredRuns({start:prev.start,end:prev.end,clientId:$('filterClient')?.value,partId:$('filterPartNumber')?.value});
+ const cm=metricsForRuns(currentRuns),pm=metricsForRuns(prevRuns),co=oeeMetrics(currentRuns),po=oeeMetrics(prevRuns);
+ setKpiComparison('kpiOee',co.available?co.oee:null,po.available?po.oee:null);
+ setKpiComparison('kpiProduction',cm.produced,pm.produced);
+ setKpiComparison('kpiScrap',cm.scrapRate,pm.scrapRate,true);
+ setKpiComparison('kpiPpm',cm.ppm,pm.ppm,true);
+ setKpiComparison('kpiYield',cm.yieldRate,pm.yieldRate);
+ setKpiComparison('kpiCopq',cm.copq,pm.copq,true);
+}
+function renderGeneralCharts(runs){
+ const d=daily(runs),labels=d.map(x=>x.date);
+ chart('generalProductionTrendChart',rangedLineConfig(labels,d.map(x=>x.produced),'cyan',chartRange('production','production')));
+ const oeeData=labels.map(date=>{const o=oeeMetrics(runs.filter(r=>r.date===date));return o.available?o.oee:null});
+ chart('oeeTrendChart',rangedLineConfig(labels,oeeData,'blue',chartRange('production','oee')));
+}
 export function renderDashboard(){
  const runs=activeRuns(),m=metricsForRuns(runs);$('kpiProduction').textContent=number(m.produced);$('kpiScrap').textContent=percent(m.scrapRate);$('kpiScrapQty').textContent=`${number(m.scrap)} piezas`;$('kpiPpm').textContent=number(Math.round(m.ppm));$('kpiYield').textContent=percent(m.yieldRate);$('kpiCopq').textContent=money(m.copq,'USD');
  const de=state.downtimeEvents.filter(e=>runs.some(r=>r.id===e.runId));const mins=de.reduce((s,e)=>s+e.minutes,0);$('kpiDowntime').textContent=`${number(mins)} min`;$('kpiDowntimeEvents').textContent=number(de.length);
  const oee=oeeMetrics(runs);$('kpiOee').textContent=oee.available?percent(oee.oee):'—';$('kpiOeeNote').textContent=oee.available?'Availability × Performance × Quality':oee.reason;
  $('kpiProdOee').textContent=oee.available?percent(oee.oee):'—';$('kpiProdOeeNote').textContent=oee.available?`${number(Math.round(oee.plannedMinutes))} min planificados`:oee.reason;
  $('kpiAvailability').textContent=oee.available?percent(oee.availability):'—';$('kpiPerformance').textContent=oee.available?percent(oee.performance):'—';$('kpiQuality').textContent=oee.available?percent(oee.quality):percent(oee.quality||0);
- renderCharts(runs,de);renderTopProducts(runs);renderCustomDashboard('general',runs,de);renderCustomDashboard('production',runs,de);renderCustomDashboard('scrap',runs,de);renderCustomDashboard('maintenance',runs,de);
+ renderGeneralCharts(runs);renderCharts(runs,de);renderTopProducts(runs);renderKpiComparisons();renderCustomDashboard('production',runs,de);renderCustomDashboard('scrap',runs,de);renderCustomDashboard('maintenance',runs,de);
 }
 
 const dashboardSettingsKey='guvel.dashboard.settings.v146';
@@ -168,7 +213,7 @@ function renderCharts(runs,downtime){const d=daily(runs),labels=d.map(x=>x.date)
  chart('productionTrendChart',rangedLineConfig(labels,d.map(x=>x.produced),'cyan',chartRange('production','production')));
  const ev=state.scrapEvents.filter(e=>runs.some(r=>r.id===e.runId)),byDef={},byPart={};ev.forEach(e=>{const n=getDefect(e.defectId)?.name||'Otro';byDef[n]=(byDef[n]||0)+e.quantity;const pn=getPart(getRun(e.runId)?.partId)?.number||'Otro';byPart[pn]=(byPart[pn]||0)+e.quantity});chart('scrapDefectPieChart',pieConfig(Object.keys(byDef),Object.values(byDef)));chart('scrapPartPieChart',pieConfig(Object.keys(byPart),Object.values(byPart)));const defSorted=Object.entries(byDef).sort((a,b)=>b[1]-a[1]),partSorted=Object.entries(byPart).sort((a,b)=>b[1]-a[1]);chart('scrapDefectParetoChart',paretoConfig(defSorted.map(x=>x[0]),defSorted.map(x=>x[1])));chart('scrapPartParetoChart',paretoConfig(partSorted.map(x=>x[0]),partSorted.map(x=>x[1])));
  const byReason={},byMachine={};downtime.forEach(e=>{const n=getDowntimeReason(e.reasonId)?.name||'Otro';byReason[n]=(byReason[n]||0)+e.minutes;const r=getRun(e.runId),mc=getMachine(r?.machineId)?.code||'Sin máquina';byMachine[mc]=(byMachine[mc]||0)+e.minutes});chart('downtimeReasonPieChart',pieConfig(Object.keys(byReason),Object.values(byReason)));chart('downtimeMachinePieChart',pieConfig(Object.keys(byMachine),Object.values(byMachine)));const reasonSorted=Object.entries(byReason).sort((a,b)=>b[1]-a[1]),machineSorted=Object.entries(byMachine).sort((a,b)=>b[1]-a[1]);chart('downtimeReasonParetoChart',paretoConfig(reasonSorted.map(x=>x[0]),reasonSorted.map(x=>x[1])));chart('downtimeMachineParetoChart',paretoConfig(machineSorted.map(x=>x[0]),machineSorted.map(x=>x[1])));}
-function renderTopProducts(runs){const el=$('topProductsGrid');const tops=topProducts(runs);el.innerHTML=tops.length?tops.map((t,i)=>{const p=getPart(t.partId),pr=defectPareto(t.runs).slice(0,3);return `<div class="top-product"><span class="rank">RANK ${i+1}</span><h4>${esc(p?.number||'—')}</h4><small>${esc(getClient(p?.clientId)?.name||'—')}</small><div class="metrics"><div><span>SCRAP</span><strong>${number(t.scrap)}</strong></div><div><span>YIELD</span><strong>${percent(t.yieldRate)}</strong></div><div><span>COPQ</span><strong>${money(t.copq,p?.currency||'USD')}</strong></div></div>${pr.map((x,j)=>`<div class="entity-item"><small>${j+1}. ${esc(x.name)}</small><strong>${number(x.qty)}</strong></div>`).join('')}</div>`}).join(''):'<div class="empty-state">Sin datos para el periodo seleccionado.</div>'}
+function renderTopProducts(runs){const el=$('topProductsGrid');if(!el)return;const tops=topProducts(runs);el.innerHTML=tops.length?tops.map((t,i)=>{const p=getPart(t.partId),pr=defectPareto(t.runs).slice(0,3);return `<div class="top-product"><span class="rank">RANK ${i+1}</span><h4>${esc(p?.number||'—')}</h4><small>${esc(getClient(p?.clientId)?.name||'—')}</small><div class="metrics"><div><span>SCRAP</span><strong>${number(t.scrap)}</strong></div><div><span>YIELD</span><strong>${percent(t.yieldRate)}</strong></div><div><span>COPQ</span><strong>${money(t.copq,p?.currency||'USD')}</strong></div></div>${pr.map((x,j)=>`<div class="entity-item"><small>${j+1}. ${esc(x.name)}</small><strong>${number(x.qty)}</strong></div>`).join('')}</div>`}).join(''):'<div class="empty-state">Sin datos para el periodo seleccionado.</div>'}
 export function renderClients(){
  $('clientCount').textContent=state.clients.length;const q=($('clientSearch')?.value||'').toLowerCase();const list=state.clients.filter(x=>`${x.name} ${x.code}`.toLowerCase().includes(q));$('clientList').innerHTML=list.map(c=>`<button class="entity-item ${c.id===state.selectedClientId?'active':''}" data-client-id="${c.id}"><span><strong>${esc(c.name)}</strong><small>${esc(c.code||'Sin código')}</small></span><span>›</span></button>`).join('');
  renderClientDetail();
