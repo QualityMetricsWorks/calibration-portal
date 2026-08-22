@@ -85,6 +85,7 @@ export async function registerProduction(x){
    p_operation_id:x.operationId,
    p_machine_id:x.machineId,
    p_quantity:x.quantity,
+   p_run_date:x.runDate,
    p_shift:x.shift,
    p_lot_number:x.lotNumber||null,
    p_operator_id:x.operatorId,
@@ -97,7 +98,7 @@ export async function registerProduction(x){
  // RPC returns the new run id/metadata. Merge it locally so dependent selectors,
  // runs and dashboard views update immediately without a full database reload.
  if(data?.id){
-   const item={id:data.id,date:data.run_date,shift:data.shift,clientId:x.clientId||state.parts.find(p=>p.id===x.partId)?.clientId||'',partId:x.partId,operationId:x.operationId,machineId:x.machineId||'',machine:x.machine||'',lotNumber:x.lotNumber||'',operatorId:x.operatorId||'',supervisorId:x.supervisorId||'',status:x.status||'completed',captureMethod:x.captureMethod||'scan',manualReason:x.manualReason||'',produced:Number(x.quantity||0),plannedMinutes:Number(x.plannedMinutes||0),notes:x.notes||'',completedAt:data.completed_at||'',createdAt:data.created_at||new Date().toISOString()};
+   const item={id:data.id,date:data.run_date||x.runDate,shift:data.shift,clientId:x.clientId||state.parts.find(p=>p.id===x.partId)?.clientId||'',partId:x.partId,operationId:x.operationId,machineId:x.machineId||'',machine:x.machine||'',lotNumber:x.lotNumber||'',operatorId:x.operatorId||'',supervisorId:x.supervisorId||'',status:x.status||'completed',captureMethod:x.captureMethod||'scan',manualReason:x.manualReason||'',produced:Number(x.quantity||0),plannedMinutes:Number(x.plannedMinutes||0),notes:x.notes||'',completedAt:data.completed_at||'',createdAt:data.created_at||new Date().toISOString()};
    const oldRun=state.runs.find(r=>r.id===item.id);
    if(oldRun)item.produced=oldRun.produced;
    state.runs=[item,...state.runs.filter(r=>r.id!==item.id)];

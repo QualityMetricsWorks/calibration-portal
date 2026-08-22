@@ -1,11 +1,12 @@
 import {$,esc,number,toast} from './utils.js';
-import {state,getPart,getClient,getOperation,getMachine,getRun,operationsForPart,machinesForPart,activePersonnelByRole,getPersonnel} from './state.js';
+import {state,getPart,getClient,getOperation,getMachine,getRun,operationsForPart,machinesForPart,activePersonnelByRole,getPersonnel,defectsForPart} from './state.js';
 import {populateSelect,renderAll,updateScrapDefects} from './ui.js';
 import * as api from './db.js';
 
-const trace={step:1,partId:'',lotNumber:'',quantity:0,operationId:'',machineId:'',shift:'',supervisorId:'',operatorId:''};
+const trace={step:1,partId:'',lotNumber:'',quantity:0,operationId:'',machineId:'',runDate:'',shift:'',supervisorId:'',operatorId:''};
 let scanner=null,scanTarget=null,onRegistered=null;
 let pendingDowntime=[];
+let pendingScrap=[];
 
 const parsePrefixed=(raw,prefix)=>{const v=String(raw||'').trim();const rx=new RegExp(`^${prefix}\\s*:\\s*`,'i');return v.replace(rx,'').trim()};
 const parsePart=raw=>parsePrefixed(raw,'NP');
@@ -49,13 +50,48 @@ if($('traceShift')){
 }
  $('traceResourceValidation').innerHTML=`<div class="validation-item">NP identificado y válido</div><div class="validation-item">Máquinas filtradas por relación NP–Máquina</div>`;
 }
+function renderPersonPicker(role){
+ const prefix=role==='supervisor'?'traceSupervisor':'traceOperator';
+ const input=$(prefix+'Search'),hidden=$(prefix),options=$(prefix+'Options');
+ if(!input||!hidden||!options)return;
+ const people=activePersonnelByRole(role);
+ const selected=getPersonnel(hidden.value);
+ input.value=selected?`${selected.employeeNo} · ${selected.fullName}`:'';
+ const query=(input.value||'').trim().toLowerCase();
+ const rows=people.filter(x=>`${x.employeeNo} ${x.fullName}`.toLowerCase().includes(query)).slice(0,50);
+ options.innerHTML=rows.length?rows.map(x=>`<button type=\"button\" class=\"person-picker-option\" data-person-id=\"${esc(x.id)}\"><strong>${esc(x.fullName)}</strong><small>${esc(x.employeeNo)}</small></button>`).join(''):`<div class=\"person-picker-empty\">Sin coincidencias.</div>`;
+ options.hidden=false;
+}
+function closePersonPickers(){document.querySelectorAll('.person-picker-options').forEach(x=>x.hidden=true)}
+function selectPerson(role,id){
+ const prefix=role==='supervisor'?'traceSupervisor':'traceOperator';
+ const hidden=$(prefix),input=$(prefix+'Search');
+ const person=getPersonnel(id);
+ if(!hidden||!input||!person)return;
+ hidden.value=person.id;input.value=`${person.employeeNo} · ${person.fullName}`;$(prefix+'Options').hidden=true;
+}
 function renderPeople(){
- populateSelect($('traceSupervisor'),activePersonnelByRole('supervisor'),'Selecciona supervisor',x=>`${x.employeeNo} · ${x.fullName}`);
- populateSelect($('traceOperator'),activePersonnelByRole('operator'),'Selecciona operador',x=>`${x.employeeNo} · ${x.fullName}`);
+ ['supervisor','operator'].forEach(role=>{
+   const prefix=role==='supervisor'?'traceSupervisor':'traceOperator';
+   const hidden=$(prefix);
+   if(hidden&&!hidden.value)$(prefix+'Search').value='';
+ });
+ closePersonPickers();
 }
 function previewRow(label,value,highlight=false){return `<div class="preview-item ${highlight?'highlight':''}"><span>${esc(label)}</span><strong>${esc(value||'—')}</strong></div>`}
 function renderDowntime(){populateSelect($('traceDowntimeReason'),state.downtimeReasons,'Selecciona motivo',x=>`${x.code} · ${x.name} · ${x.downtimeType==='planned'?'Planeado':'No planeado'}`);$('traceDowntimeList').innerHTML=pendingDowntime.map((x,i)=>`<span class="downtime-chip">${esc(state.downtimeReasons.find(r=>r.id===x.reasonId)?.name||'Paro')} · ${number(x.minutes)} min <button type="button" data-remove-downtime="${i}">×</button></span>`).join('')}
-function renderPreview(){renderDowntime();
+function renderInlineScrap(){
+ const defs=defectsForPart(trace.partId,trace.operationId);
+ populateSelect($('traceScrapDefect'),defs,'Selecciona defecto',x=>`${x.code} · ${x.name}`);
+ const total=pendingScrap.reduce((s,x)=>s+Number(x.quantity||0),0);
+ $('traceScrapList').innerHTML=pendingScrap.map((x,i)=>{
+   const d=defs.find(z=>z.id===x.defectId)||getDefectById(x.defectId);
+   return `<span class="downtime-chip">${esc(d?.name||'Defecto')} · ${number(x.quantity)} · ${esc(x.disposition)} <button type="button" data-remove-trace-scrap="${i}">×</button></span>`;
+ }).join('');
+ const totalEl=$('traceScrapTotal');if(totalEl)totalEl.textContent=`${number(total)} piezas`;
+}
+function getDefectById(id){return state?.defects?.find(x=>x.id===id)}
+function renderPreview(){renderDowntime();renderInlineScrap();
  trace.operationId=$('traceOperation').value;trace.machineId=$('traceMachine').value;trace.shift=$('traceShift').value;trace.supervisorId=$('traceSupervisor').value;trace.operatorId=$('traceOperator').value;
  const p=getPart(trace.partId),op=getOperation(trace.operationId),m=getMachine(trace.machineId),sup=getPersonnel(trace.supervisorId),oper=getPersonnel(trace.operatorId);
  $('traceValidation').innerHTML=[
@@ -66,7 +102,7 @@ function renderPreview(){renderDowntime();
   'Cantidad válida',
   'Supervisor identificado',
   'Operador identificado',
-  'Fecha, hora y turno serán asignados por Supabase'
+  'Fecha de producción capturada manualmente · hora de registro del sistema'
  ].map(x=>`<div class="validation-item">${esc(x)}</div>`).join('');
  $('tracePreview').innerHTML=[
   previewRow('Número de Parte',p?.number,true),
@@ -77,15 +113,15 @@ function renderPreview(){renderDowntime();
   previewRow('Máquina',m?.code),
   previewRow('Supervisor',sup?.fullName),
   previewRow('Operador',oper?.fullName),
-  previewRow('Fecha / Hora','Automático al confirmar'),
+  previewRow('Fecha de producción',trace.runDate),
   previewRow('Turno',state.shiftSchedules.find(x=>x.code===trace.shift||x.id===trace.shift)?.name||trace.shift||'—',true),
   previewRow('Método','Escaneo'),
   previewRow('Estado','Completado')
  ].join('');
 }
 function reset(){
- pendingDowntime=[];Object.assign(trace,{step:1,partId:'',lotNumber:'',quantity:0,operationId:'',machineId:'',shift:'',supervisorId:'',operatorId:''});
- ['tracePartScan','traceLotScan','traceQtyScan'].forEach(id=>$(id).value='');
+ pendingDowntime=[];pendingScrap=[];Object.assign(trace,{step:1,partId:'',lotNumber:'',quantity:0,operationId:'',machineId:'',runDate:'',shift:'',supervisorId:'',operatorId:''});
+ ['traceRunDate','tracePartScan','traceLotScan','traceQtyScan','traceSupervisorSearch','traceOperatorSearch','traceSupervisor','traceOperator'].forEach(id=>$(id).value='');
  ['tracePartResult','traceLotResult','traceValidation','tracePreview'].forEach(id=>$(id).innerHTML='');
  $('traceConfirmCheck').checked=false;
  setStep(1);
@@ -125,17 +161,40 @@ export function initTraceability(callback){
  $('traceLotContinue').addEventListener('click',()=>{if(validateLot($('traceLotScan').value))setStep(3)});
  $('traceQtyContinue').addEventListener('click',()=>{if(validateQty($('traceQtyScan').value))setStep(4)});
  bindEnter('tracePartScan',validatePart,2);bindEnter('traceLotScan',validateLot,3);bindEnter('traceQtyScan',validateQty,4);
- $('traceResourceContinue').addEventListener('click',()=>{if(!$('traceOperation').value||!$('traceMachine').value||!$('traceShift').value)return toast('Selecciona operación, máquina y turno.');trace.operationId=$('traceOperation').value;trace.machineId=$('traceMachine').value;setStep(5)});
+ $('traceResourceContinue').addEventListener('click',()=>{if(!$('traceRunDate').value||!$('traceOperation').value||!$('traceMachine').value||!$('traceShift').value)return toast('Selecciona fecha, operación, máquina y turno.');trace.runDate=$('traceRunDate').value;trace.operationId=$('traceOperation').value;trace.machineId=$('traceMachine').value;setStep(5)});
  $('tracePeopleContinue').addEventListener('click',()=>{if(!$('traceSupervisor').value||!$('traceOperator').value)return toast('Selecciona supervisor y operador.');setStep(6)});
+ ['supervisor','operator'].forEach(role=>{
+   const prefix=role==='supervisor'?'traceSupervisor':'traceOperator';
+   const input=$(prefix+'Search'),options=$(prefix+'Options');
+   input?.addEventListener('focus',()=>renderPersonPicker(role));
+   input?.addEventListener('input',()=>{
+     $(prefix).value='';
+     renderPersonPicker(role);
+   });
+   options?.addEventListener('click',e=>{const b=e.target.closest('[data-person-id]');if(b)selectPerson(role,b.dataset.personId)});
+ });
+ document.addEventListener('click',e=>{if(!e.target.closest('.person-picker'))closePersonPickers()});
  document.querySelectorAll('.trace-back').forEach(b=>b.addEventListener('click',()=>setStep(Number(b.dataset.backStep))));
- $('addTraceDowntimeBtn').addEventListener('click',()=>{const reasonId=$('traceDowntimeReason').value,minutes=Number($('traceDowntimeMinutes').value);if(!reasonId||minutes<=0)return toast('Selecciona motivo y minutos.');pendingDowntime.push({reasonId,minutes,eventType:$('traceDowntimeType').value});$('traceDowntimeMinutes').value='';renderDowntime()});
- document.body.addEventListener('click',e=>{const b=e.target.closest('[data-remove-downtime]');if(b){pendingDowntime.splice(Number(b.dataset.removeDowntime),1);renderDowntime()}});
+ $('addTraceScrapBtn').addEventListener('click',()=>{
+ const defectId=$('traceScrapDefect').value,quantity=Number($('traceScrapQuantity').value),disposition=$('traceScrapDisposition').value;
+ const total=pendingScrap.reduce((s,x)=>s+Number(x.quantity||0),0);
+ if(!defectId||quantity<=0)return toast('Selecciona defecto y cantidad de scrap.');
+ if(total+quantity>trace.quantity)return toast('El scrap acumulado no puede superar la cantidad producida.');
+ pendingScrap.push({defectId,quantity,disposition,extraCost:Number($('traceScrapExtraCost').value||0),reason:$('traceScrapReason').value||'',notes:$('traceScrapNotes').value||''});
+ $('traceScrapQuantity').value='';$('traceScrapExtraCost').value='0';$('traceScrapReason').value='';$('traceScrapNotes').value='';renderInlineScrap();
+});
+$('addTraceDowntimeBtn').addEventListener('click',()=>{const reasonId=$('traceDowntimeReason').value,minutes=Number($('traceDowntimeMinutes').value);if(!reasonId||minutes<=0)return toast('Selecciona motivo y minutos.');pendingDowntime.push({reasonId,minutes,eventType:$('traceDowntimeType').value});$('traceDowntimeMinutes').value='';renderDowntime()});
+ document.body.addEventListener('click',e=>{
+ const b=e.target.closest('[data-remove-downtime]');if(b){pendingDowntime.splice(Number(b.dataset.removeDowntime),1);renderDowntime()}
+ const s=e.target.closest('[data-remove-trace-scrap]');if(s){pendingScrap.splice(Number(s.dataset.removeTraceScrap),1);renderInlineScrap()}
+});
  $('traceConfirmBtn').addEventListener('click',async()=>{
   if(!$('traceConfirmCheck').checked)return toast('Confirma la información antes de registrar.');
   try{
    $('traceConfirmBtn').disabled=true;$('traceConfirmBtn').textContent='Registrando…';
-   const data=await api.registerProduction({partId:trace.partId,operationId:trace.operationId,machineId:trace.machineId,quantity:trace.quantity,lotNumber:trace.lotNumber,shift:trace.shift,operatorId:trace.operatorId,supervisorId:trace.supervisorId,status:'completed',captureMethod:'scan'});
+   const data=await api.registerProduction({partId:trace.partId,operationId:trace.operationId,machineId:trace.machineId,quantity:trace.quantity,runDate:trace.runDate,lotNumber:trace.lotNumber,shift:trace.shift,operatorId:trace.operatorId,supervisorId:trace.supervisorId,status:'completed',captureMethod:'scan'});
    if(pendingDowntime.length)await api.insertDowntimeEvents(data.id,pendingDowntime);
+   if(pendingScrap.length)for(const item of pendingScrap)await api.insertScrapEvent({runId:data.id,...item});
    toast(data?.action==='finalized_partial'?'Parcial finalizado correctamente':'Producción registrada correctamente');
    reset();if(onRegistered)await onRegistered();
   }catch(e){console.error(e);toast(e.message||'No se pudo registrar la producción.')}

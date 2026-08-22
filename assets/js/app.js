@@ -4,7 +4,7 @@ import * as api from './db.js';
 import * as ui from './ui.js';
 import {metricsForRuns,copqForEvent} from './metrics.js';
 import {initTraceability,renderBarcode,printBarcode} from './traceability.js';
-import {initI18n,applyLanguage} from './i18n.js';
+import {initI18n,applyLanguage,tr} from './i18n.js';
 
 let db;
 const canCapture=()=>['admin','manager','supervisor'].includes(state.role);
@@ -36,7 +36,7 @@ function setView(view){
  $(`${view}View`)?.classList.add('active');
  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
  $('exportBtn').hidden=view!=='data';
- $('pageTitle').textContent=({dashboard:'Dashboard',capture:'Captura',clients:'Clientes',parts:'Números de Parte',machines:'Máquinas',personnel:'Personal',catalog:'Catálogo',runs:'Corridas',users:'Usuarios',data:'Datos',history:'Historial',settings:'Configuración'})[view]||view;
+ const pageLabels={dashboard:'Dashboard',capture:'Captura',clients:'Clientes',parts:'Números de Parte',machines:'Máquinas',personnel:'Personal',catalog:'Catálogo',runs:'Corridas',users:'Usuarios',data:'Datos',history:'Historial',settings:'Configuración'}; $('pageTitle').textContent=tr(pageLabels[view]||view); $('pageTitle').setAttribute('data-i18n',pageLabels[view]||view);
  if(view==='runs')refreshRunsView();
  else if(view==='users'){renderUsersAdmin();applyLanguage()}
  else if(view==='history')refreshAuditView();
@@ -168,6 +168,8 @@ function bindTabs(){
  }));
 }
 
+$('printRunBtn')?.addEventListener('click',()=>window.print());
+
 function resetQualityCapture(){
  $('scrapMatchForm').reset();$('scrapEventForm').reset();$('scrapRun').value='';$('matchedRunsList').innerHTML='';$('selectedRunSummary').textContent='Completa los datos para localizar la corrida.';ui.renderSelects();
 }
@@ -239,10 +241,63 @@ function initEvents(){
 
  $('machineForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertMachine({code:$('machineCode').value.trim(),name:$('machineName').value.trim()})).then(()=>e.target.reset())});
  $('personnelForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertPersonnel({employeeNo:$('personnelEmployeeNo').value.trim(),fullName:$('personnelName').value.trim(),role:$('personnelRole').value})).then(()=>e.target.reset())});
+ $('editPersonnelBtn')?.addEventListener('click',()=>{const p=state.personnel.find(x=>x.id===state.selectedPersonnelId);if(!p)return;$('editPersonnelEmployeeNo').value=p.employeeNo||'';$('editPersonnelName').value=p.fullName||'';$('editPersonnelRole').value=p.role||'operator';$('personnelEditForm').hidden=false});
+ $('cancelPersonnelEditBtn')?.addEventListener('click',()=>{$('personnelEditForm').hidden=true});
+ $('personnelEditForm')?.addEventListener('submit',e=>{e.preventDefault();if(!canManage())return;const id=state.selectedPersonnelId;run(()=>api.updatePersonnel(id,{employeeNo:$('editPersonnelEmployeeNo').value.trim(),fullName:$('editPersonnelName').value.trim(),role:$('editPersonnelRole').value}),'Personal actualizado').then(()=>{$('personnelEditForm').hidden=true})});
  $('operationForm').addEventListener('submit',e=>{e.preventDefault();if(!state.selectedPartId)return toast('Selecciona un NP.');run(()=>api.insertOperation({partId:state.selectedPartId,code:$('operationCode').value.trim(),name:$('operationName').value.trim()})).then(()=>e.target.reset())});
  $('defectForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertDefect({partId:$('defectPartNumber').value,operationId:$('defectOperation').value,code:$('defectCode').value.trim(),name:$('defectName').value.trim(),category:$('defectCategory').value})).then(()=>{e.target.reset();ui.renderSelects()})});
  $('downtimeReasonForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertDowntimeReason({code:$('downtimeCode').value.trim(),name:$('downtimeName').value.trim(),category:$('downtimeCategory').value,downtimeType:$('downtimeType').value})).then(()=>e.target.reset())});
 
+ // Dashboard settings, custom dashboards and layout
+ const openDashboardSettings=(kind,metric,customId=null)=>{
+   const modal=$('dashboardSettingsModal'),sel=$('dashboardMetricSelect');if(!modal||!sel)return;
+   sel.innerHTML=ui.dashboardMetricOptions(kind).map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');
+   sel.disabled=true;sel.value=metric||sel.value;modal.dataset.kind=kind;modal.dataset.customId=customId||'';
+   const custom=customId?ui.getCustomDashboard(kind,customId):null;
+   const r=custom?.range||ui.getDashboardSetting(kind,sel.value);
+   $('dashboardMin').value=r.min;$('dashboardMax').value=r.max;$('dashboardTarget').value=r.target;modal.hidden=false;
+ };
+ document.body.addEventListener('click',e=>{
+   const b=e.target.closest('[data-dashboard-settings]');
+   if(b)openDashboardSettings(b.dataset.dashboardSettings,b.dataset.dashboardMetric,b.dataset.customDashboardId||null);
+   const add=e.target.closest('[data-add-custom-dashboard]');
+   if(add){
+     const kind=add.dataset.addCustomDashboard,modal=$('customDashboardModal'),sel=$('customDashboardMetric');if(!modal||!sel)return;
+     $('customDashboardModalTitle').textContent='Añadir dashboard';$('customDashboardId').value='';$('customDashboardKind').value=kind;$('customDashboardName').value='';$('customDashboardSpan').value='1';
+     sel.innerHTML=ui.dashboardMetricOptions(kind).map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');modal.hidden=false;
+   }
+   const edit=e.target.closest('[data-edit-custom-dashboard]');
+   if(edit){
+     const kind=edit.dataset.editCustomDashboard,id=edit.dataset.customDashboardId,x=ui.getCustomDashboard(kind,id);if(!x)return;
+     const modal=$('customDashboardModal'),sel=$('customDashboardMetric');$('customDashboardModalTitle').textContent='Editar dashboard';$('customDashboardId').value=id;$('customDashboardKind').value=kind;$('customDashboardName').value=x.name;$('customDashboardSpan').value=String(x.span||1);
+     sel.innerHTML=ui.dashboardMetricOptions(kind).map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');sel.value=x.metric;modal.hidden=false;
+   }
+   const del=e.target.closest('[data-delete-custom-dashboard]');
+   if(del){const kind=del.dataset.deleteCustomDashboard,id=del.dataset.customDashboardId;if(confirm('¿Eliminar este dashboard?')){ui.removeCustomDashboard(kind,id);ui.renderDashboard()}}
+   const span=e.target.closest('[data-set-custom-span]');
+   if(span){ui.updateCustomDashboard(span.dataset.setCustomSpan,span.dataset.customDashboardId,{span:Number(span.dataset.span)});ui.renderDashboard()}
+ });
+ $('dashboardMetricSelect')?.addEventListener('change',e=>{
+   const modal=$('dashboardSettingsModal'),customId=modal.dataset.customId,kind=modal.dataset.kind;
+   const r=customId?ui.getCustomDashboard(kind,customId)?.range||ui.getDashboardSetting(kind,e.target.value):ui.getDashboardSetting(kind,e.target.value);
+   $('dashboardMin').value=r.min;$('dashboardMax').value=r.max;$('dashboardTarget').value=r.target;
+ });
+ const closeDash=()=>{$('dashboardSettingsModal').hidden=true};$('closeDashboardSettingsBtn')?.addEventListener('click',closeDash);$('cancelDashboardSettingsBtn')?.addEventListener('click',closeDash);
+ $('dashboardSettingsForm')?.addEventListener('submit',e=>{
+   e.preventDefault();const modal=$('dashboardSettingsModal'),kind=modal.dataset.kind,customId=modal.dataset.customId,metric=$('dashboardMetricSelect').value,min=Number($('dashboardMin').value),max=Number($('dashboardMax').value),target=Number($('dashboardTarget').value);
+   if(!(max>min)&&!(max===min&&min===0))return toast('El máximo debe ser mayor al mínimo.');
+   if(target<min||target>max)return toast('La meta debe estar dentro del rango.');
+   if(customId)ui.saveCustomDashboardSetting(kind,customId,{min,max,target});else ui.saveDashboardSetting(kind,metric,{min,max,target});
+   closeDash();ui.renderDashboard();
+ });
+ const closeCustom=()=>{$('customDashboardModal').hidden=true};$('closeCustomDashboardModalBtn')?.addEventListener('click',closeCustom);$('cancelCustomDashboardBtn')?.addEventListener('click',closeCustom);
+ $('customDashboardForm')?.addEventListener('submit',e=>{
+   e.preventDefault();const kind=$('customDashboardKind').value,id=$('customDashboardId').value,name=$('customDashboardName').value.trim(),metric=$('customDashboardMetric').value,span=Number($('customDashboardSpan').value||1);
+   if(!name)return;
+   if(id){const old=ui.getCustomDashboard(kind,id);ui.updateCustomDashboard(kind,id,{name,metric,metricLabel:ui.dashboardMetricOptions(kind).find(x=>x[0]===metric)?.[1]||metric,span})}
+   else ui.addCustomDashboard(kind,name,metric,span);
+   closeCustom();ui.renderDashboard();
+ });
  // Searches
  $('clientSearch').addEventListener('input',ui.renderClients);$('partSearch').addEventListener('input',ui.renderParts);$('machineSearch').addEventListener('input',ui.renderMachines);$('personnelSearch').addEventListener('input',ui.renderPersonnel);$('defectSearch').addEventListener('input',ui.renderCatalog);$('downtimeSearch').addEventListener('input',ui.renderDowntimeCatalog);$('runSearch').addEventListener('input',ui.renderRuns);$('productionHistorySearch').addEventListener('input',ui.renderHistory);$('scrapHistorySearch').addEventListener('input',ui.renderHistory);
  document.querySelectorAll('.form-cancel-btn').forEach(b=>b.addEventListener('click',()=>b.closest('form')?.reset()));

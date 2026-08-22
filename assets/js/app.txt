@@ -4,7 +4,7 @@ import * as api from './db.js';
 import * as ui from './ui.js';
 import {metricsForRuns,copqForEvent} from './metrics.js';
 import {initTraceability,renderBarcode,printBarcode} from './traceability.js';
-import {initI18n,applyLanguage} from './i18n.js';
+import {initI18n,applyLanguage,tr} from './i18n.js';
 
 let db;
 const canCapture=()=>['admin','manager','supervisor'].includes(state.role);
@@ -36,7 +36,7 @@ function setView(view){
  $(`${view}View`)?.classList.add('active');
  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
  $('exportBtn').hidden=view!=='data';
- $('pageTitle').textContent=({dashboard:'Dashboard',capture:'Captura',clients:'Clientes',parts:'Números de Parte',machines:'Máquinas',personnel:'Personal',catalog:'Catálogo',runs:'Corridas',users:'Usuarios',data:'Datos',history:'Historial',settings:'Configuración'})[view]||view;
+ const pageLabels={dashboard:'Dashboard',capture:'Captura',clients:'Clientes',parts:'Números de Parte',machines:'Máquinas',personnel:'Personal',catalog:'Catálogo',runs:'Corridas',users:'Usuarios',data:'Datos',history:'Historial',settings:'Configuración'}; $('pageTitle').textContent=tr(pageLabels[view]||view); $('pageTitle').setAttribute('data-i18n',pageLabels[view]||view);
  if(view==='runs')refreshRunsView();
  else if(view==='users'){renderUsersAdmin();applyLanguage()}
  else if(view==='history')refreshAuditView();
@@ -168,6 +168,8 @@ function bindTabs(){
  }));
 }
 
+$('printRunBtn')?.addEventListener('click',()=>window.print());
+
 function resetQualityCapture(){
  $('scrapMatchForm').reset();$('scrapEventForm').reset();$('scrapRun').value='';$('matchedRunsList').innerHTML='';$('selectedRunSummary').textContent='Completa los datos para localizar la corrida.';ui.renderSelects();
 }
@@ -239,10 +241,24 @@ function initEvents(){
 
  $('machineForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertMachine({code:$('machineCode').value.trim(),name:$('machineName').value.trim()})).then(()=>e.target.reset())});
  $('personnelForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertPersonnel({employeeNo:$('personnelEmployeeNo').value.trim(),fullName:$('personnelName').value.trim(),role:$('personnelRole').value})).then(()=>e.target.reset())});
+ $('editPersonnelBtn')?.addEventListener('click',()=>{const p=state.personnel.find(x=>x.id===state.selectedPersonnelId);if(!p)return;$('editPersonnelEmployeeNo').value=p.employeeNo||'';$('editPersonnelName').value=p.fullName||'';$('editPersonnelRole').value=p.role||'operator';$('personnelEditForm').hidden=false});
+ $('cancelPersonnelEditBtn')?.addEventListener('click',()=>{$('personnelEditForm').hidden=true});
+ $('personnelEditForm')?.addEventListener('submit',e=>{e.preventDefault();if(!canManage())return;const id=state.selectedPersonnelId;run(()=>api.updatePersonnel(id,{employeeNo:$('editPersonnelEmployeeNo').value.trim(),fullName:$('editPersonnelName').value.trim(),role:$('editPersonnelRole').value}),'Personal actualizado').then(()=>{$('personnelEditForm').hidden=true})});
  $('operationForm').addEventListener('submit',e=>{e.preventDefault();if(!state.selectedPartId)return toast('Selecciona un NP.');run(()=>api.insertOperation({partId:state.selectedPartId,code:$('operationCode').value.trim(),name:$('operationName').value.trim()})).then(()=>e.target.reset())});
  $('defectForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertDefect({partId:$('defectPartNumber').value,operationId:$('defectOperation').value,code:$('defectCode').value.trim(),name:$('defectName').value.trim(),category:$('defectCategory').value})).then(()=>{e.target.reset();ui.renderSelects()})});
  $('downtimeReasonForm').addEventListener('submit',e=>{e.preventDefault();if(!canManage())return toast('Solo Admin o Manager.');run(()=>api.insertDowntimeReason({code:$('downtimeCode').value.trim(),name:$('downtimeName').value.trim(),category:$('downtimeCategory').value,downtimeType:$('downtimeType').value})).then(()=>e.target.reset())});
 
+ // Dashboard settings and custom dashboard creation
+ document.querySelectorAll('[data-dashboard-settings]').forEach(btn=>btn.addEventListener('click',()=>{
+   const kind=btn.dataset.dashboardSettings,modal=$('dashboardSettingsModal'),sel=$('dashboardMetricSelect');if(!modal||!sel)return;
+   sel.innerHTML=ui.dashboardMetricOptions(kind).map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');
+   modal.dataset.kind=kind;const first=sel.value;const r=ui.getDashboardSetting(kind,first);
+   $('dashboardMin').value=r.min;$('dashboardMax').value=r.max;$('dashboardTarget').value=r.target;modal.hidden=false;
+ }));
+ $('dashboardMetricSelect')?.addEventListener('change',e=>{const r=ui.getDashboardSetting($('dashboardSettingsModal').dataset.kind,e.target.value);$('dashboardMin').value=r.min;$('dashboardMax').value=r.max;$('dashboardTarget').value=r.target});
+ const closeDash=()=>{$('dashboardSettingsModal').hidden=true};$('closeDashboardSettingsBtn')?.addEventListener('click',closeDash);$('cancelDashboardSettingsBtn')?.addEventListener('click',closeDash);
+ $('dashboardSettingsForm')?.addEventListener('submit',e=>{e.preventDefault();const kind=$('dashboardSettingsModal').dataset.kind,metric=$('dashboardMetricSelect').value,min=Number($('dashboardMin').value),max=Number($('dashboardMax').value),target=Number($('dashboardTarget').value);if(!(max>min)&&!(max===min&&min===0))return toast('El máximo debe ser mayor al mínimo.');if(target<min||target>max)return toast('La meta debe estar dentro del rango.');ui.saveDashboardSetting(kind,metric,{min,max,target});closeDash();ui.renderDashboard()});
+ document.body.addEventListener('click',e=>{const b=e.target.closest('[data-add-custom-dashboard]');if(!b)return;const kind=b.dataset.addCustomDashboard;const name=prompt('Nombre del dashboard adicional:');if(!name?.trim())return;ui.addCustomDashboard(kind,name.trim());ui.renderDashboard()});
  // Searches
  $('clientSearch').addEventListener('input',ui.renderClients);$('partSearch').addEventListener('input',ui.renderParts);$('machineSearch').addEventListener('input',ui.renderMachines);$('personnelSearch').addEventListener('input',ui.renderPersonnel);$('defectSearch').addEventListener('input',ui.renderCatalog);$('downtimeSearch').addEventListener('input',ui.renderDowntimeCatalog);$('runSearch').addEventListener('input',ui.renderRuns);$('productionHistorySearch').addEventListener('input',ui.renderHistory);$('scrapHistorySearch').addEventListener('input',ui.renderHistory);
  document.querySelectorAll('.form-cancel-btn').forEach(b=>b.addEventListener('click',()=>b.closest('form')?.reset()));
