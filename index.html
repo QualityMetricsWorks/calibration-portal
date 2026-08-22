@@ -160,8 +160,8 @@
           <article class="kpi-card money"><span>COPQ Scrap</span><strong id="kpiCopq">$0.00</strong><small id="kpiCopqUsd">Costo estándar estimado</small></article>
         </div>
         <div class="dashboard-grid general-six-charts">
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>OEE</h3></div><div class="chart-wrap general-chart-placeholder"><div class="general-kpi-chart"><strong id="generalOeeValue">—</strong><span>OEE</span></div></div></article>
-          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Producción</h3></div><div class="chart-wrap general-chart-placeholder"><div class="general-kpi-chart"><strong id="generalProductionValue">—</strong><span>Producción</span></div></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>OEE</h3></div><div class="chart-wrap"><canvas id="oeeTrendChart"></canvas></div></article>
+          <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Producción</h3></div><div class="chart-wrap"><canvas id="generalProductionTrendChart"></canvas></div></article>
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap %</h3></div><div class="chart-wrap"><canvas id="scrapTrendChart"></canvas></div></article>
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>PPM</h3></div><div class="chart-wrap"><canvas id="ppmTrendChart"></canvas></div></article>
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Yield</h3></div><div class="chart-wrap"><canvas id="yieldTrendChart"></canvas></div></article>
@@ -183,7 +183,7 @@
       <div class="dashboard-panel" data-dashboard-panel="scrap">
         <div class="section-intro"><p class="eyebrow">Calidad</p><h2>Calidad</h2><p>Distribución y priorización de pérdidas por defecto y Número de Parte.</p></div>
         
-        <article class="card section-card"><div class="card-header"><div><p class="eyebrow">Concentración de pérdida</p><h3>Top 3 productos con mayor scrap</h3></div></div><div id="topProductsGrid" class="top-products-grid"></div></article><div class="dashboard-grid">
+        <article class="card section-card quality-top-scrap-card"><div class="card-header"><div><p class="eyebrow">Concentración de pérdida</p><h3>Top 3 productos con mayor scrap</h3></div></div><div id="topProductsGrid" class="top-products-grid"></div></article><div class="dashboard-grid">
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por defecto</h3></div><div class="chart-wrap"><canvas id="scrapDefectPieChart"></canvas></div></article>
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><h3>Scrap por Número de Parte</h3></div><div class="chart-wrap"><canvas id="scrapPartPieChart"></canvas></div></article>
           <article class="card chart-card"><div class="card-header dashboard-chart-header"><div><p class="eyebrow">80 / 20</p><h3>Pareto por defecto</h3></div></div><div class="chart-wrap"><canvas id="scrapDefectParetoChart"></canvas></div></article>

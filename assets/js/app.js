@@ -346,44 +346,21 @@ async function startSession(user){
  try{await api.loadIdentity(user);await api.loadAll();$('authOverlay').classList.add('hidden');$('companyContext').textContent=state.companyName;$('userEmail').textContent=user.email;$('storageStatus').textContent='Sistema Actualizado';applyRolePermissions();ui.renderAll();applyLanguage()}
  catch(e){console.error(e);toast(e.message);$('authOverlay').classList.remove('hidden')}
 }
-function iso(d){return d.toISOString().slice(0,10)}
+function iso(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`} 
 function applyPeriod(v){
- const now=new Date(),s=new Date(now),e=new Date(now);if(v==='custom')return;
- if(v==='today'){
-   s.setHours(0,0,0,0);e.setHours(23,59,59,999);
- }else if(v==='current_week'){
-   const day=(now.getDay()+6)%7;
-   s.setDate(now.getDate()-day);s.setHours(0,0,0,0);
-   e.setHours(23,59,59,999);
- }else if(v==='current_month'){
-   s.setDate(1);s.setHours(0,0,0,0);
-   e.setHours(23,59,59,999);
- }else if(v==='current'){
-   s.setDate(1);s.setHours(0,0,0,0);e.setHours(23,59,59,999);
- }else if(v==='previous_day'){
-   s.setDate(now.getDate()-1);s.setHours(0,0,0,0);
-   e.setDate(now.getDate()-1);e.setHours(23,59,59,999);
- }else if(v==='previous_week'){
-   const day=(now.getDay()+6)%7;
-   e.setDate(now.getDate()-day-1);e.setHours(23,59,59,999);
-   s.setTime(e.getTime());s.setDate(e.getDate()-6);s.setHours(0,0,0,0);
- }else if(v==='previous_month'){
-   s.setMonth(now.getMonth()-1,1);s.setHours(0,0,0,0);
-   e.setDate(0);e.setHours(23,59,59,999);
- }else if(v==='previous_quarter'){
-   const q=Math.floor(now.getMonth()/3);
-   s.setMonth((q-1)*3,1);s.setHours(0,0,0,0);
-   e.setMonth(q*3,0);e.setHours(23,59,59,999);
- }else if(v==='previous_half'){
-   const half=now.getMonth()<6?0:1;
-   s.setFullYear(half?now.getFullYear():now.getFullYear()-1);
-   s.setMonth(half?0:6,1);s.setHours(0,0,0,0);
-   e.setFullYear(s.getFullYear());e.setMonth(s.getMonth()+6,0);e.setHours(23,59,59,999);
- }else if(v==='previous_year'){
-   s.setFullYear(now.getFullYear()-1,0,1);s.setHours(0,0,0,0);
-   e.setFullYear(now.getFullYear()-1,11,31);e.setHours(23,59,59,999);
- }
- $('filterStart').value=iso(s);$('filterEnd').value=iso(e)
+ const now=new Date();let s,e;
+ if(v==='custom')return;
+ if(v==='today'){s=new Date(now.getFullYear(),now.getMonth(),now.getDate());e=new Date(s)}
+ else if(v==='current_week'){const day=(now.getDay()+6)%7;s=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day);e=new Date(now.getFullYear(),now.getMonth(),now.getDate())}
+ else if(v==='current_month'||v==='current'){s=new Date(now.getFullYear(),now.getMonth(),1);e=new Date(now.getFullYear(),now.getMonth(),now.getDate())}
+ else if(v==='previous_day'){s=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);e=new Date(s)}
+ else if(v==='previous_week'){const day=(now.getDay()+6)%7;s=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day-7);e=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day-1)}
+ else if(v==='previous_month'){s=new Date(now.getFullYear(),now.getMonth()-1,1);e=new Date(now.getFullYear(),now.getMonth(),0)}
+ else if(v==='previous_quarter'){const q=Math.floor(now.getMonth()/3);s=new Date(now.getFullYear(),q*3-3,1);e=new Date(now.getFullYear(),q*3,0)}
+ else if(v==='previous_half'){const half=now.getMonth()<6?0:1;s=new Date(half?now.getFullYear():now.getFullYear()-1,half?0:6,1);e=new Date(s.getFullYear(),s.getMonth()+6,0)}
+ else if(v==='previous_year'){s=new Date(now.getFullYear()-1,0,1);e=new Date(now.getFullYear()-1,11,31)}
+ else return;
+ $('filterStart').value=iso(s);$('filterEnd').value=iso(e);
 }
 async function init(){
  db=api.initDb();initI18n();initEvents();window.GUVEL_RENDER_BARCODE=renderBarcode;initTraceability(()=>{ui.renderAll();applyLanguage();$('storageStatus').textContent='Sistema Actualizado';toast('Producción registrada correctamente')});applyPeriod('current');
