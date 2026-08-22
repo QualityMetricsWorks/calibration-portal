@@ -349,13 +349,40 @@ async function startSession(user){
 function iso(d){return d.toISOString().slice(0,10)}
 function applyPeriod(v){
  const now=new Date(),s=new Date(now),e=new Date(now);if(v==='custom')return;
- if(v==='current')s.setDate(1);
- else if(v==='previous_day'){s.setDate(now.getDate()-1);e.setDate(now.getDate()-1)}
- else if(v==='previous_week'){const day=(now.getDay()+6)%7;e.setDate(now.getDate()-day-1);s.setTime(e.getTime());s.setDate(e.getDate()-6)}
- else if(v==='previous_month'){s.setMonth(now.getMonth()-1,1);e.setDate(0)}
- else if(v==='previous_quarter'){const q=Math.floor(now.getMonth()/3);s.setMonth((q-1)*3,1);e.setMonth(q*3,0)}
- else if(v==='previous_half'){const half=now.getMonth()<6?0:1;s.setFullYear(half?now.getFullYear():now.getFullYear()-1);s.setMonth(half?0:6,1);e.setFullYear(s.getFullYear());e.setMonth(s.getMonth()+6,0)}
- else if(v==='previous_year'){s.setFullYear(now.getFullYear()-1,0,1);e.setFullYear(now.getFullYear()-1,11,31)}
+ if(v==='today'){
+   s.setHours(0,0,0,0);e.setHours(23,59,59,999);
+ }else if(v==='current_week'){
+   const day=(now.getDay()+6)%7;
+   s.setDate(now.getDate()-day);s.setHours(0,0,0,0);
+   e.setHours(23,59,59,999);
+ }else if(v==='current_month'){
+   s.setDate(1);s.setHours(0,0,0,0);
+   e.setHours(23,59,59,999);
+ }else if(v==='current'){
+   s.setDate(1);s.setHours(0,0,0,0);e.setHours(23,59,59,999);
+ }else if(v==='previous_day'){
+   s.setDate(now.getDate()-1);s.setHours(0,0,0,0);
+   e.setDate(now.getDate()-1);e.setHours(23,59,59,999);
+ }else if(v==='previous_week'){
+   const day=(now.getDay()+6)%7;
+   e.setDate(now.getDate()-day-1);e.setHours(23,59,59,999);
+   s.setTime(e.getTime());s.setDate(e.getDate()-6);s.setHours(0,0,0,0);
+ }else if(v==='previous_month'){
+   s.setMonth(now.getMonth()-1,1);s.setHours(0,0,0,0);
+   e.setDate(0);e.setHours(23,59,59,999);
+ }else if(v==='previous_quarter'){
+   const q=Math.floor(now.getMonth()/3);
+   s.setMonth((q-1)*3,1);s.setHours(0,0,0,0);
+   e.setMonth(q*3,0);e.setHours(23,59,59,999);
+ }else if(v==='previous_half'){
+   const half=now.getMonth()<6?0:1;
+   s.setFullYear(half?now.getFullYear():now.getFullYear()-1);
+   s.setMonth(half?0:6,1);s.setHours(0,0,0,0);
+   e.setFullYear(s.getFullYear());e.setMonth(s.getMonth()+6,0);e.setHours(23,59,59,999);
+ }else if(v==='previous_year'){
+   s.setFullYear(now.getFullYear()-1,0,1);s.setHours(0,0,0,0);
+   e.setFullYear(now.getFullYear()-1,11,31);e.setHours(23,59,59,999);
+ }
  $('filterStart').value=iso(s);$('filterEnd').value=iso(e)
 }
 async function init(){

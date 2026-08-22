@@ -517,7 +517,3 @@ html[data-theme="dark"] .custom-dashboard-card{background:var(--color-surface);b
 .general-chart-placeholder{display:flex;align-items:center;justify-content:center;min-height:210px}
 .general-kpi-chart{text-align:center}.general-kpi-chart strong{display:block;font-size:42px;line-height:1;font-weight:800;color:var(--color-text)}.general-kpi-chart span{display:block;margin-top:10px;font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.12em}
 @media(max-width:1000px){.general-six-charts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.general-six-charts{grid-template-columns:1fr}}
-
-/* v1.4.8.3 — Quality Top 3 spacing */
-.quality-top-scrap-card{margin-top:10px!important;margin-bottom:26px!important}
-.quality-top-scrap-card + .dashboard-grid{margin-top:20px!important}
